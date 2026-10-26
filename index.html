@@ -1,0 +1,2314 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ruta al Ring">
+<meta name="theme-color" content="#0a0a0b">
+<title>Ruta al Ring · Entrenador IA</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config={theme:{extend:{colors:{ink:'#0a0a0b',coal:'#141416',steel:'#1e1f23',line:'#2a2b31',neon:'#e6ff00',blood:'#ff2d3d',go:'#22c55e'},fontFamily:{display:['"Bebas Neue"','Impact','sans-serif'],sans:['Inter','system-ui','sans-serif']}}}}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  html,body{background:#0a0a0b;color:#e7e7ea}
+  body{font-family:Inter,system-ui,sans-serif;-webkit-tap-highlight-color:transparent;overscroll-behavior-y:none;transition:background-color .35s ease}
+  .pt-safe{padding-top:max(env(safe-area-inset-top),8px)}
+  .pb-safe{padding-bottom:max(env(safe-area-inset-bottom),6px)}
+  .card{background:#141416;border:1px solid #2a2b31;border-radius:1rem}
+  input,select,textarea{font-size:16px!important}
+  .inp{width:100%;background:#0a0a0b;border:1px solid #2a2b31;border-radius:.75rem;padding:.65rem .8rem;color:#fff;outline:none}
+  .inp:focus{border-color:#e6ff00}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;border-radius:.8rem;font-weight:700;padding:.7rem 1rem;transition:transform .1s,opacity .2s}
+  .btn:active{transform:scale(.96)}
+  .btn-neon{background:#e6ff00;color:#0a0a0b}
+  .btn-red{background:#ff2d3d;color:#fff}
+  .btn-ghost{background:#1e1f23;color:#e7e7ea;border:1px solid #2a2b31}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:9px;background:#2a2b31}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:#e6ff00;border:3px solid #0a0a0b}
+  .mirror{transform:scaleX(-1)}
+  @keyframes pulseRed{0%,100%{box-shadow:0 0 0 0 rgba(255,45,61,.0);border-color:#ff2d3d}50%{box-shadow:0 0 0 6px rgba(255,45,61,.55);border-color:#ff8a94}}
+  .alarm{animation:pulseRed .5s infinite}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+  .blink{animation:blink .5s infinite}
+  @keyframes flash{0%{opacity:.85}100%{opacity:0}}
+  .flash{animation:flash .6s ease-out}
+  #camWrap.camfull{position:fixed;inset:0;z-index:55;margin:0;border-radius:0;border-width:0;background:#000}
+  #camWrap.camfull video,#camWrap.camfull canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+  #camWrap.camfull #fsHud{display:flex}
+  #camWrap.camfull #alertBox{top:calc(env(safe-area-inset-top) + 205px)}
+  #camWrap.camfull .hudbar{bottom:calc(env(safe-area-inset-bottom) + 10px)}
+  #camWrap.camfull #ghostWrap{bottom:calc(env(safe-area-inset-bottom) + 50px);width:9.5rem}
+  #camWrap.camfull #ghost{height:12.5rem}
+  #camWrap.camfull.wideghost #ghostWrap{width:13rem}
+  .tshadow{text-shadow:0 2px 8px rgba(0,0,0,.85)}
+  .scroll-x{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .scroll-x::-webkit-scrollbar{display:none}
+</style>
+</head>
+<body class="min-h-screen">
+
+<div id="flashLayer" class="fixed inset-0 pointer-events-none z-[70] opacity-0"></div>
+<div id="toast" class="fixed left-1/2 -translate-x-1/2 bottom-24 z-[70] hidden max-w-[90vw] rounded-xl bg-neon px-4 py-2 text-sm font-bold text-ink shadow-lg"></div>
+
+<!-- HEADER -->
+<header class="pt-safe sticky top-0 z-30 bg-ink/90 backdrop-blur border-b border-line">
+  <div class="mx-auto max-w-xl px-4 pb-2 flex items-center justify-between">
+    <div>
+      <h1 class="font-display text-3xl leading-none tracking-wide"><span class="text-neon">RUTA</span> AL RING</h1>
+      <p class="text-[11px] text-zinc-400 -mt-0.5">Entrenador IA · Pachuca</p>
+    </div>
+    <div class="flex items-center gap-2">
+      <span id="hdrCountdown" class="whitespace-nowrap rounded-full bg-steel border border-line px-3 py-1 text-xs font-semibold text-neon"></span>
+      <button id="btnSettings" class="btn-ghost rounded-full p-2" aria-label="Ajustes y respaldo">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="mx-auto max-w-xl px-4 pt-4 pb-32">
+
+<!-- ============ 1. COACH IA ============ -->
+<section id="tab-ia" class="tab">
+  <div class="card p-4">
+    <div class="flex items-center justify-between gap-3">
+      <div>
+        <p class="text-xs font-bold text-neon tracking-widest">ENTRENADOR IA</p>
+        <h2 id="iaTitle" class="font-display text-3xl leading-none">Revisión de guardia</h2>
+      </div>
+      <button id="camBtn" class="btn btn-neon shrink-0">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+        <span id="camBtnTxt">Encender</span>
+      </button>
+    </div>
+    <p class="mt-2 text-xs text-zinc-400">Todo se procesa en tu iPhone: el video nunca sale del dispositivo ni se graba. <span id="iaPlace">Colócate a 2–3 m, de frente, con hombros y cara visibles.</span></p>
+    <div id="iaModes" class="scroll-x mt-3 flex gap-2 pb-1"></div>
+  </div>
+
+  <div id="camWrap" class="relative mt-3 overflow-hidden rounded-2xl border-4 border-line bg-black">
+    <video id="video" class="mirror block w-full h-auto" playsinline muted autoplay></video>
+    <canvas id="overlay" class="mirror pointer-events-none absolute inset-0 h-full w-full"></canvas>
+    <div id="camIdle" class="flex aspect-[3/4] flex-col items-center justify-center gap-3 p-6 text-center">
+      <svg class="w-14 h-14 text-zinc-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="5" r="2.5"/><path d="M12 8v7M7 11l5-2 5 2M8 21l4-6 4 6"/></svg>
+      <p class="text-sm text-zinc-400">Toca <b class="text-neon">Encender</b> y acepta el permiso de cámara.<br>El modelo de IA (~6 MB) se descarga una sola vez.</p>
+    </div>
+    <div id="camLoading" class="absolute inset-0 hidden items-center justify-center bg-black/70 text-sm font-semibold text-neon">Cargando modelo de pose…</div>
+    <div id="ghostWrap" class="pointer-events-none absolute bottom-11 right-2 hidden w-28 overflow-hidden rounded-xl border border-neon/50 bg-black/65">
+      <div id="ghost" class="h-36"></div>
+      <p id="ghostCue" class="px-1 pb-1 text-center text-[10px] font-bold leading-tight text-neon"></p>
+    </div>
+    <div id="fsHud" class="pointer-events-none absolute inset-0 hidden flex-col">
+      <div class="pt-safe pointer-events-auto bg-gradient-to-b from-black/85 to-transparent px-3 pb-5">
+        <div class="flex items-center gap-2">
+          <div id="fsModes" class="scroll-x flex min-w-0 flex-1 gap-1.5"></div>
+          <button id="fsExit" class="btn btn-red h-10 w-10 shrink-0 rounded-full p-0 text-lg" aria-label="Apagar cámara">✕</button>
+        </div>
+        <div class="mt-2 flex gap-2">
+          <button id="fsCalib" class="btn btn-ghost flex-1 py-2 text-xs">Calibrar mi guardia</button>
+          <button id="fsSave" class="btn btn-neon flex-1 py-2 text-xs">Guardar y calificar</button>
+        </div>
+      </div>
+      <div class="tshadow flex items-start justify-between px-4">
+        <div><p id="fsBigL" class="text-[11px] font-extrabold tracking-widest text-white">GUARDIA ARRIBA</p><p id="fsBig" class="font-display text-7xl leading-none text-neon">–</p></div>
+        <div class="text-right"><p id="fsS1L" class="text-[10px] font-extrabold tracking-widest text-white">ALERTAS</p><p id="fsS1" class="font-display text-4xl leading-none">0</p>
+          <p id="fsS2L" class="mt-1 text-[10px] font-extrabold tracking-widest text-white">TIEMPO</p><p id="fsS2" class="font-display text-3xl leading-none">0:00</p></div>
+      </div>
+    </div>
+    <div id="alertBox" class="pointer-events-none absolute inset-x-3 top-3 space-y-2"></div>
+    <div class="hudbar pointer-events-none absolute inset-x-3 bottom-3 flex justify-between gap-2 text-xs font-bold">
+      <span id="hudL" class="rounded-lg bg-black/70 px-2 py-1">Izq: –</span>
+      <span id="hudFps" class="rounded-lg bg-black/70 px-2 py-1 text-zinc-400">– cuadros/s</span>
+      <span id="hudR" class="rounded-lg bg-black/70 px-2 py-1">Der: –</span>
+    </div>
+  </div>
+
+  <div class="mt-3 grid grid-cols-3 gap-2 text-center">
+    <div class="card p-3"><p id="stL1" class="text-[10px] text-zinc-400">GUARDIA ARRIBA</p><p id="stGuard" class="font-display text-3xl text-neon">–</p></div>
+    <div class="card p-3"><p id="stL2" class="text-[10px] text-zinc-400">ALERTAS</p><p id="stAlerts" class="font-display text-3xl">0</p></div>
+    <div class="card p-3"><p id="stL3" class="text-[10px] text-zinc-400">TIEMPO</p><p id="stTime" class="font-display text-3xl">0:00</p></div>
+  </div>
+
+  <div class="card mt-3 p-4 space-y-4">
+    <p class="text-xs font-bold tracking-widest text-zinc-400">AJUSTES DEL ENTRENADOR</p>
+    <div class="grid grid-cols-2 gap-2">
+      <button id="flipCam" class="btn btn-ghost text-sm">Cámara: frontal</button>
+      <button id="iaSound" class="btn btn-ghost text-sm">Sonido: sí</button>
+      <button id="iaVoice" class="btn btn-ghost text-sm">Voz: sí</button>
+      <select id="guardLine" class="inp text-sm">
+        <option value="chin">Línea: barbilla</option>
+        <option value="eyes">Línea: ojos (estricto)</option>
+        <option value="calib">Línea: mi guardia calibrada</option>
+      </select>
+    </div>
+    <div id="elbowRow">
+      <div class="flex justify-between text-sm"><span>Ángulo máximo de codos</span><span id="elbowVal" class="font-bold text-neon">40°</span></div>
+      <input id="elbowTol" type="range" min="25" max="75" step="1" value="40">
+      <p class="mt-1 text-xs text-zinc-400">Mide el ángulo entre tu brazo y tu costado: con los codos pegados marca 10–25°. Calibra para que la IA aprenda tu guardia.</p>
+      <button id="calibBtn" class="btn btn-ghost mt-2 w-full text-sm">Calibrar mi guardia (3 s)</button>
+      <p id="calibInfo" class="mt-1 text-[11px] text-zinc-500"></p>
+    </div>
+    <div id="exTargetRow" class="hidden items-center justify-between">
+      <span class="text-sm">Meta de la serie</span>
+      <div class="flex items-center gap-2">
+        <button id="exMinus" class="btn btn-ghost h-10 w-10 p-0 text-xl" aria-label="Bajar meta">−</button>
+        <b id="exTarget" class="w-24 text-center font-display text-2xl text-neon">10</b>
+        <button id="exPlus" class="btn btn-ghost h-10 w-10 p-0 text-xl" aria-label="Subir meta">+</button>
+      </div>
+    </div>
+    <div id="ghostRow">
+      <p class="mb-1 text-sm">Movimiento a imitar en pantalla</p>
+      <select id="ghostSel" class="inp text-sm"></select>
+      <p class="mt-1 text-xs text-zinc-400">Una figura animada en vista espejo aparece sobre la cámara: replícala mientras el entrenador revisa tu guardia.</p>
+    </div>
+    <button id="saveIa" class="btn btn-neon w-full">Guardar sesión de IA</button>
+    <div id="iaHistory" class="space-y-2"></div>
+  </div>
+
+  <div class="card mt-3 p-4 text-sm text-zinc-300 space-y-2">
+    <p class="text-xs font-bold tracking-widest text-neon">CÓMO SACARLE PROVECHO</p>
+    <p>• Haz 1 round de sombra frente a la cámara antes de cada rutina: tu meta es más de 90% de guardia arriba.</p>
+    <p>• Tras lanzar el jab o el 1-2, la mano debe volver a tu cara antes de 1 segundo: si la alerta suena justo después de golpear, estás regresando lento.</p>
+    <p>• Apoya el iPhone a la altura del pecho. Con buena luz de frente la detección es mucho más estable.</p>
+  </div>
+</section>
+
+<!-- ============ TÉCNICA ============ -->
+<section id="tab-tecnica" class="tab hidden">
+  <div class="card overflow-hidden">
+    <div class="flex items-start justify-between gap-3 p-4 pb-2">
+      <div class="min-w-0">
+        <p id="libCat" class="text-xs font-bold tracking-widest text-neon">GOLPES</p>
+        <h2 id="libName" class="font-display text-3xl leading-none">Jab</h2>
+      </div>
+      <span id="libNum" class="shrink-0 rounded-xl bg-blood px-3 py-1 font-display text-3xl text-white">1</span>
+    </div>
+    <div id="libStage" class="mx-3 h-80 rounded-2xl border border-line bg-gradient-to-b from-steel to-ink"></div>
+    <div class="flex items-center gap-2 p-3">
+      <button id="libPlay" class="btn btn-neon h-12 w-12 shrink-0 rounded-full p-0" aria-label="Pausar o reproducir"></button>
+      <div id="libSpeed" class="grid flex-1 grid-cols-3 gap-1"></div>
+    </div>
+    <div id="libView" class="grid grid-cols-3 gap-1 px-3"></div>
+    <div class="flex items-center justify-between gap-2 p-3">
+      <button id="libVoice" class="btn btn-ghost py-2 text-sm">Voz del entrenador: sí</button>
+      <span class="text-sm text-zinc-400">Repeticiones <b id="libReps" class="font-display text-2xl text-neon">0</b></span>
+    </div>
+    <div class="px-3 pb-3"><button id="libGhost" class="btn btn-red w-full">Imitar con Entrenador IA (cámara)</button></div>
+  </div>
+  <div class="card mt-3 p-4">
+    <p id="libDesc" class="text-sm text-zinc-300"></p>
+    <ul id="libTips" class="mt-3 space-y-1.5 text-sm"></ul>
+    <p class="mt-3 text-[11px] text-zinc-500">Vista Espejo: la figura se mueve como tu reflejo, ideal para copiarla de frente. Lateral muestra la extensión del golpe. Atleta diestro (guardia ortodoxa).</p>
+  </div>
+  <div class="card mt-3 p-3">
+    <div id="libCats" class="scroll-x flex gap-2 pb-1"></div>
+    <div id="libList" class="mt-3 grid grid-cols-2 gap-2"></div>
+  </div>
+</section>
+
+<!-- ============ 2. TIMER ============ -->
+<section id="tab-timer" class="tab hidden">
+  <div class="card p-3">
+    <p class="mb-2 text-xs font-bold tracking-widest text-zinc-400">RUTINA DEL DÍA</p>
+    <div id="daySel" class="grid grid-cols-7 gap-1"></div>
+    <p id="routineName" class="mt-3 font-display text-2xl leading-tight text-neon"></p>
+    <p id="routineDesc" class="text-xs text-zinc-400"></p>
+  </div>
+
+  <div id="timerPanel" class="card relative mt-3 overflow-hidden p-4 text-center transition-colors duration-300">
+    <div class="flex items-center justify-between text-xs font-bold">
+      <span id="tRound" class="rounded-full bg-black/40 px-3 py-1">ROUND 1/6</span>
+      <span id="tConf" class="rounded-full bg-black/40 px-3 py-1 text-zinc-300">3:00 / 1:00</span>
+    </div>
+    <div class="relative mx-auto my-3 h-64 w-64">
+      <svg viewBox="0 0 200 200" class="h-full w-full -rotate-90">
+        <circle cx="100" cy="100" r="90" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="10"/>
+        <circle id="ring" cx="100" cy="100" r="90" fill="none" stroke="#e6ff00" stroke-width="10" stroke-linecap="round" stroke-dasharray="565.49" stroke-dashoffset="0"/>
+      </svg>
+      <div class="absolute inset-0 flex flex-col items-center justify-center">
+        <p id="tPhase" class="text-sm font-extrabold tracking-widest text-zinc-300">LISTO</p>
+        <p id="tTime" class="font-display text-7xl leading-none tabular-nums">3:00</p>
+        <p id="tBurst" class="mt-1 h-6 text-base font-extrabold"></p>
+      </div>
+    </div>
+    <div class="flex items-center justify-center gap-3">
+      <button id="tPrev" class="btn btn-ghost h-14 w-14 rounded-full p-0" aria-label="Round anterior"><svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M19 20 9 12l10-8v16zM5 19V5h2v14z"/></svg></button>
+      <button id="tPlay" class="btn btn-neon h-20 w-20 rounded-full p-0" aria-label="Iniciar o pausar"></button>
+      <button id="tNext" class="btn btn-ghost h-14 w-14 rounded-full p-0" aria-label="Siguiente round"><svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="m5 4 10 8-10 8V4zM17 5h2v14h-2z"/></svg></button>
+      <button id="tReset" class="btn btn-ghost h-14 w-14 rounded-full p-0" aria-label="Reiniciar"><svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></button>
+    </div>
+    <div class="mt-4 grid grid-cols-3 gap-2 text-xs">
+      <select id="cfgWork" class="inp py-2 text-xs"><option value="180">Round 3:00</option><option value="120">Round 2:00</option><option value="60">Round 1:00</option></select>
+      <select id="cfgRest" class="inp py-2 text-xs"><option value="60">Desc. 1:00</option><option value="45">Desc. 0:45</option><option value="30">Desc. 0:30</option></select>
+      <button id="tSound" class="btn btn-ghost py-2 text-xs">Voz: sí</button>
+    </div>
+    <p class="mt-2 text-[11px] text-zinc-400">Aviso a los 10 s finales. Si no escuchas la campana, revisa el interruptor de silencio del iPhone.</p>
+    <div id="tLog" class="mt-3 space-y-1.5 text-left"></div>
+    <button id="tFull" class="btn btn-ghost mt-3 w-full text-sm">Modo rutina a pantalla completa</button>
+  </div>
+
+  <div id="roundCard" class="card mt-3 p-4">
+    <div id="rcTop"></div>
+    <div id="rcFig" class="my-2 h-64 rounded-2xl border border-line bg-gradient-to-b from-steel to-ink"></div>
+    <button id="rcOpen" class="mb-3 w-full text-center text-xs font-semibold text-zinc-400 underline">Ver en cámara lenta en Técnica</button>
+    <div id="rcBody"></div>
+  </div>
+  <div class="card mt-3 p-4">
+    <p class="mb-2 text-xs font-bold tracking-widest text-zinc-400">TODOS LOS ROUNDS</p>
+    <div id="roundList" class="space-y-1"></div>
+  </div>
+  <div class="card mt-3 p-4 text-sm text-zinc-300 space-y-2">
+    <p class="text-xs font-bold tracking-widest text-neon">COMBUSTIBLE</p>
+    <p>• <b>Antes (45–60 min):</b> un plátano o pan con miel. Energía rápida y barata para no entrenar en ayunas.</p>
+    <p>• <b>Durante:</b> agua a sorbos en cada descanso, no tragos grandes.</p>
+    <p>• <b>Después (en la primera hora):</b> huevo con tortillas, frijoles con arroz, atún o leche con avena.</p>
+    <p>• <b>Diario:</b> 2.5–3 L de agua y 7–8 h de sueño: ahí se recuperan hombros y piernas.</p>
+  </div>
+</section>
+
+<!-- ============ 3. PLAN ============ -->
+<section id="tab-plan" class="tab hidden">
+  <div id="nextMilestone" class="card p-4"></div>
+  <div id="milestones" class="relative mt-3 space-y-3"></div>
+  <div class="card mt-3 p-4">
+    <p class="mb-2 text-xs font-bold tracking-widest text-zinc-400">MESES DE PUENTE</p>
+    <div id="bridges" class="space-y-2 text-sm"></div>
+  </div>
+  <div class="card mt-3 p-4 text-sm text-zinc-300 space-y-2">
+    <p class="text-xs font-bold tracking-widest text-neon">REGLAS DEFENSIVAS DE ORO</p>
+    <p>1. Mentón abajo siempre: un golpe en la barbilla expuesta es el que te tumba.</p>
+    <p>2. Cada mano regresa a tu cara por el mismo camino por el que salió.</p>
+    <p>3. Nunca retrocedas en línea recta: sal en ángulo después de golpear.</p>
+    <p>4. Ojos abiertos: lo que no ves es lo que te pega.</p>
+    <p>5. Codos cerrados protegiendo costillas e hígado.</p>
+  </div>
+</section>
+
+<!-- ============ 4. AHORRO ============ -->
+<section id="tab-ahorro" class="tab hidden">
+  <div class="card p-4">
+    <div class="flex items-start justify-between">
+      <div>
+        <p class="text-xs font-bold tracking-widest text-neon">FONDO DE GUANTES</p>
+        <p class="font-display text-5xl leading-none"><span id="svSaved">$0</span><span class="text-2xl text-zinc-500"> / $3,600</span></p>
+      </div>
+      <span id="svPct" class="rounded-full bg-steel px-3 py-1 font-display text-2xl text-neon">0%</span>
+    </div>
+    <div class="mt-3 h-5 overflow-hidden rounded-full bg-steel">
+      <div id="svBar" class="h-full rounded-full bg-gradient-to-r from-blood to-neon transition-all duration-700" style="width:0%"></div>
+    </div>
+    <p id="svMsg" class="mt-2 text-sm text-zinc-300"></p>
+    <div class="mt-4 flex gap-2">
+      <input id="svAmt" type="number" inputmode="decimal" min="1" placeholder="Monto a abonar" class="inp">
+      <button id="svAdd" class="btn btn-neon shrink-0">Abonar</button>
+    </div>
+    <div class="mt-2 grid grid-cols-4 gap-2">
+      <button data-q="100" class="svq btn btn-ghost py-2 text-sm">+100</button>
+      <button data-q="200" class="svq btn btn-ghost py-2 text-sm">+200</button>
+      <button data-q="500" class="svq btn btn-ghost py-2 text-sm">+500</button>
+      <button data-q="1200" class="svq btn btn-ghost py-2 text-sm">+1,200</button>
+    </div>
+  </div>
+
+  <div class="card mt-3 p-4">
+    <p class="mb-3 text-xs font-bold tracking-widest text-zinc-400">¿PARA QUÉ ES CADA PESO?</p>
+    <div id="svBreak" class="space-y-3"></div>
+  </div>
+
+  <div class="card mt-3 p-4">
+    <p class="mb-1 text-xs font-bold tracking-widest text-zinc-400">PLAN CON TUS $12,000 MXN</p>
+    <p class="mb-3 text-xs text-zinc-400">Separa el ahorro el mismo día que cobras, antes de gastar.</p>
+    <div id="svPlan" class="space-y-2"></div>
+  </div>
+
+  <div class="card mt-3 p-4">
+    <div class="mb-2 flex items-center justify-between">
+      <p class="text-xs font-bold tracking-widest text-zinc-400">CHECKLIST DE EQUIPO</p>
+      <span id="shopTotal" class="text-xs font-bold text-neon"></span>
+    </div>
+    <div id="shopList" class="space-y-2"></div>
+    <p class="mt-2 text-[11px] text-zinc-500">Precios estimados de equipo de entrada en México; toca el precio para anotar lo que pagaste.</p>
+  </div>
+
+  <div class="card mt-3 p-4">
+    <p class="mb-2 text-xs font-bold tracking-widest text-zinc-400">HISTORIAL DE ABONOS</p>
+    <div id="svHist" class="space-y-2"></div>
+  </div>
+</section>
+
+<!-- ============ 5. DIARIO ============ -->
+<section id="tab-diario" class="tab hidden">
+  <div class="card p-4">
+    <p class="text-xs font-bold tracking-widest text-neon">DIARIO POST-ENTRENO</p>
+    <div class="mt-3 grid grid-cols-2 gap-2">
+      <input id="dDate" type="date" class="inp">
+      <select id="dType" class="inp">
+        <option>Coordinación</option><option>Potencia</option><option>Recuperación</option><option>Ejercicios</option><option>Gimnasio</option><option>Sparring</option>
+      </select>
+    </div>
+    <div id="dSliders" class="mt-4 space-y-5"></div>
+    <div class="mt-5">
+      <p class="text-sm font-semibold">¿Dónde sientes el dolor muscular?</p>
+      <p class="text-[11px] text-zinc-400">Toca cada músculo: leve → moderado → fuerte → sin dolor.</p>
+      <div id="mapPost" class="mt-2"></div>
+    </div>
+    <details id="dMetrics" class="mt-4 rounded-xl border border-line bg-ink/40 p-3">
+      <summary class="cursor-pointer text-sm font-bold text-neon">Métricas y medidas del día</summary>
+      <div class="mt-3 grid grid-cols-2 gap-2 text-xs text-zinc-400">
+        <label>Peso (kg)<input id="mPeso" type="number" inputmode="decimal" step="0.1" class="inp mt-1" placeholder="ej. 72.4"></label>
+        <label>FC en reposo (lpm)<input id="mFc" type="number" inputmode="numeric" class="inp mt-1" placeholder="ej. 64"></label>
+        <label>Horas de sueño<input id="mSueno" type="number" inputmode="decimal" step="0.5" class="inp mt-1" placeholder="ej. 7.5"></label>
+        <label>Agua (litros)<input id="mAgua" type="number" inputmode="decimal" step="0.1" class="inp mt-1" placeholder="ej. 2.5"></label>
+        <label class="col-span-2">Rounds completados<input id="mRounds" type="number" inputmode="numeric" class="inp mt-1" placeholder="ej. 6"></label>
+      </div>
+      <p class="mt-4 text-xs font-bold tracking-widest text-zinc-400">MEDIDAS CORPORALES (CM)</p>
+      <div class="mt-2 grid grid-cols-2 gap-2 text-xs text-zinc-400">
+        <label>Cuello<input id="m_cuello" type="number" inputmode="decimal" step="0.1" class="inp mt-1" placeholder="cm"></label>
+        <label>Pecho<input id="m_pecho" type="number" inputmode="decimal" step="0.1" class="inp mt-1" placeholder="cm"></label>
+        <label>Cintura (ombligo)<input id="m_cintura" type="number" inputmode="decimal" step="0.1" class="inp mt-1" placeholder="cm"></label>
+        <label>Cadera<input id="m_cadera" type="number" inputmode="decimal" step="0.1" class="inp mt-1" placeholder="cm"></label>
+        <label>Bíceps (contraído)<input id="m_biceps" type="number" inputmode="decimal" step="0.1" class="inp mt-1" placeholder="cm"></label>
+        <label>Antebrazo<input id="m_antebrazo" type="number" inputmode="decimal" step="0.1" class="inp mt-1" placeholder="cm"></label>
+        <label>Muslo<input id="m_muslo" type="number" inputmode="decimal" step="0.1" class="inp mt-1" placeholder="cm"></label>
+        <label>Pantorrilla<input id="m_pantorrilla" type="number" inputmode="decimal" step="0.1" class="inp mt-1" placeholder="cm"></label>
+      </div>
+      <p class="mt-2 text-[11px] text-zinc-500">Todo es opcional. Medidas cada 2 semanas, en la mañana y siempre del mismo lado.</p>
+    </details>
+    <textarea id="dNote" rows="2" class="inp mt-4" placeholder="¿Qué salió bien? ¿Qué corregir mañana?"></textarea>
+    <button id="dSave" class="btn btn-neon mt-3 w-full">Guardar sesión</button>
+  </div>
+
+  <div id="nextDay" class="card mt-3 p-4"></div>
+
+  <div class="card mt-3 p-4">
+    <p class="text-xs font-bold tracking-widest text-zinc-400">TENDENCIA (ESCALA 1–10)</p>
+    <div class="mt-1 flex flex-wrap gap-x-3 text-[11px]">
+      <span class="text-blood">● Cansancio</span><span class="text-orange-400">● Dolor al terminar</span><span class="text-sky-400">● Dolor día siguiente</span><span class="text-neon">● Coordinación ×2</span>
+    </div>
+    <canvas id="dChart" class="mt-2 h-44 w-full"></canvas>
+    <div id="dInsights" class="mt-3 space-y-2"></div>
+  </div>
+
+  <div class="card mt-3 p-4">
+    <p class="text-xs font-bold tracking-widest text-zinc-400">MAPA DE DOLOR MUSCULAR · ÚLTIMOS 14 DÍAS</p>
+    <div id="mapHeat" class="mt-2"></div>
+    <p id="heatTop" class="mt-1 text-center text-xs text-zinc-400"></p>
+  </div>
+
+  <div class="card mt-3 p-4">
+    <div class="flex items-center justify-between">
+      <p class="text-xs font-bold tracking-widest text-neon">VALORACIÓN DE PROGRESO</p>
+      <span id="evScore" class="rounded-full bg-steel px-3 py-1 font-display text-2xl">–</span>
+    </div>
+    <div id="evTiles" class="mt-3 grid grid-cols-2 gap-2"></div>
+    <div id="evChips" class="scroll-x mt-4 flex gap-2 pb-1"></div>
+    <p id="evLegend" class="mt-2 text-[11px]"></p>
+    <canvas id="evChart" class="mt-1 h-44 w-full"></canvas>
+    <div id="evNotes" class="mt-3 space-y-2"></div>
+  </div>
+
+  <div class="card mt-3 p-4">
+    <p class="text-xs font-bold tracking-widest text-blood">DOLOR EN ARTICULACIONES</p>
+    <p class="mt-1 text-xs text-zinc-400">Distinto al dolor muscular: muñecas, codos, rodillas… Toca una zona: leve → moderado → fuerte → sin dolor.</p>
+    <div id="zones" class="mt-3 grid grid-cols-2 gap-2"></div>
+    <div id="zoneAlerts" class="mt-3 space-y-2"></div>
+    <button id="zSave" class="btn btn-ghost mt-3 w-full">Guardar reporte de articulaciones</button>
+  </div>
+
+  <div class="card mt-3 p-4">
+    <p class="mb-2 text-xs font-bold tracking-widest text-zinc-400">HISTORIAL</p>
+    <div id="dHist" class="space-y-2"></div>
+  </div>
+</section>
+<!-- ============ PERFIL ============ -->
+<section id="tab-perfil" class="tab hidden">
+  <div id="pfHead" class="card p-4"></div>
+  <div class="card mt-3 p-4">
+    <p class="text-xs font-bold tracking-widest text-zinc-400">PUNTAJE POR ÁREA · ÚLTIMAS 2 SEMANAS</p>
+    <div id="pfAreas" class="mt-3 grid grid-cols-2 gap-2"></div>
+  </div>
+  <div class="card mt-3 p-4">
+    <p class="text-xs font-bold tracking-widest text-neon">DESBLOQUEOS DE ENTRENAMIENTO</p>
+    <p class="mt-1 text-xs text-zinc-400">Cada fase se abre cuando cumples todos sus requisitos y la anterior ya está desbloqueada.</p>
+    <div id="pfGates" class="mt-3 space-y-3"></div>
+  </div>
+  <div class="card mt-3 p-4">
+    <p class="text-xs font-bold tracking-widest text-zinc-400">MÉRITOS RECIENTES</p>
+    <div id="pfMerits" class="mt-2 space-y-1.5"></div>
+    <details class="mt-3 text-xs text-zinc-400">
+      <summary class="cursor-pointer font-semibold text-zinc-200">¿Cómo gano y pierdo puntos?</summary>
+      <ul class="mt-2 space-y-1">
+        <li><b class="text-go">+10</b> rutina del Cronómetro completa · <b class="text-go">+4</b> incompleta (50% o más) · <b class="text-blood">−5</b> abandonada (menos de 50%)</li>
+        <li><b class="text-go">+8</b> serie de ejercicio completa con 80%+ de precisión · <b class="text-go">+5</b> completa · <b class="text-go">+2</b> incompleta · <b class="text-blood">−4</b> abandonada · <b class="text-blood">−2</b> precisión menor a 50%</li>
+        <li><b class="text-go">+8</b> guardia 90%+ con Entrenador IA · <b class="text-go">+4</b> 70–89% · <b class="text-blood">−2</b> menos de 50%</li>
+        <li><b class="text-go">+3</b> sesión registrada en el diario · <b class="text-go">+1</b> seguimiento del día siguiente</li>
+        <li><b class="text-go">+10</b> semana con 4+ días entrenados · <b class="text-blood">−5</b> semana con 1 día o menos · <b class="text-blood">−5 a −20</b> por 4+ días seguidos sin entrenar</li>
+        <li><b class="text-go">+1</b> por cada $100 ahorrados · <b class="text-go">+20</b> al completar el Fondo · <b class="text-go">+5</b> por objetivo del Plan cumplido</li>
+      </ul>
+    </details>
+  </div>
+</section>
+</main>
+
+<!-- MODO RUTINA (pantalla completa) -->
+<div id="focus" class="fixed inset-0 z-[55] hidden flex-col transition-colors duration-300" style="background:#0a0a0b">
+  <div class="pt-safe flex items-center justify-between gap-2 px-4">
+    <div class="min-w-0"><p id="fRound" class="text-xs font-extrabold tracking-widest text-white/80">ROUND 1/6</p><p id="fTitle" class="truncate font-display text-2xl leading-tight"></p></div>
+    <button id="fMin" class="shrink-0 rounded-full bg-black/40 px-3 py-2 text-xs font-bold text-white">Minimizar</button>
+  </div>
+  <div class="px-4 text-center">
+    <p id="fPhase" class="text-sm font-extrabold tracking-[.3em] text-white/85">PREPÁRATE</p>
+    <p id="fTime" class="font-display text-[7rem] leading-[.85] tabular-nums">0:10</p>
+    <div class="mt-1 h-2 w-full overflow-hidden rounded-full bg-black/30"><div id="fBar" class="h-full rounded-full bg-white/90" style="width:0%"></div></div>
+    <p id="fBurst" class="mt-1 h-7 text-xl font-extrabold"></p>
+  </div>
+  <div class="relative mx-3 mt-1 min-h-0 flex-1 overflow-hidden rounded-3xl border border-white/10 bg-black/30">
+    <div id="fFig" class="h-full w-full"></div>
+    <p id="fCue" class="pointer-events-none absolute inset-x-3 bottom-3 rounded-xl bg-black/75 px-3 py-2 text-center text-base font-extrabold text-neon"></p>
+    <button id="fStepsBtn" class="absolute right-2 top-2 rounded-full bg-black/60 px-3 py-1.5 text-xs font-bold text-white">Ver pasos</button>
+    <div id="fSteps" class="absolute inset-0 hidden overflow-y-auto bg-black/90 p-4 text-sm text-zinc-200"></div>
+  </div>
+  <p id="fNext" class="mx-4 mt-2 truncate text-center text-xs font-semibold text-white/85"></p>
+  <div class="pb-safe flex items-center justify-center gap-4 px-4 pt-2">
+    <button id="fPrev" class="btn h-14 w-14 rounded-full bg-black/40 p-0 text-white" aria-label="Round anterior"><svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M19 20 9 12l10-8v16zM5 19V5h2v14z"/></svg></button>
+    <button id="fPlay" class="btn btn-neon h-20 w-20 rounded-full p-0" aria-label="Iniciar o pausar"></button>
+    <button id="fNext2" class="btn h-14 w-14 rounded-full bg-black/40 p-0 text-white" aria-label="Siguiente round"><svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="m5 4 10 8-10 8V4zM17 5h2v14h-2z"/></svg></button>
+    <button id="fStop" class="btn h-14 w-14 rounded-full bg-black/40 p-0 text-white" aria-label="Terminar rutina"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="2"/></svg></button>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav class="pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-line bg-ink/95 backdrop-blur">
+  <div id="nav" class="mx-auto grid max-w-xl grid-cols-7"></div>
+</nav>
+
+<!-- SETTINGS -->
+<div id="settings" class="fixed inset-0 z-50 hidden items-end bg-black/70">
+  <div class="pb-safe mx-auto max-h-[88vh] w-full max-w-xl overflow-y-auto rounded-t-3xl border-t border-line bg-coal p-5">
+    <div class="mb-3 flex items-center justify-between">
+      <p class="font-display text-3xl">Ajustes y respaldo</p>
+      <button id="setClose" class="btn btn-ghost rounded-full p-2" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="space-y-3 text-sm text-zinc-300">
+      <p class="rounded-xl border border-neon/40 bg-neon/10 p-3"><b class="text-neon">Importante en iPhone:</b> agrega la app a tu pantalla de inicio (Compartir → “Agregar a inicio”). Safari puede borrar los datos de sitios que no visitas en 7 días; como app de inicio quedan protegidos. Exporta un respaldo cada semana.</p>
+      <div class="rounded-xl border border-line bg-steel p-3">
+        <p class="text-xs font-bold tracking-widest text-neon">VOZ DEL ENTRENADOR</p>
+        <select id="voiceSel" class="inp mt-2 text-sm"></select>
+        <div class="mt-2 flex items-center gap-2"><span class="text-xs">Velocidad</span><input id="voiceRate" type="range" min="0.8" max="1.2" step="0.05" value="1" class="flex-1"><button id="voiceTest" class="btn btn-ghost px-3 py-2 text-xs">Probar</button></div>
+        <p id="voiceHint" class="mt-2 text-[11px] text-orange-300">Tu iPhone solo tiene voces básicas. Para una voz mucho más natural descarga una mejorada (gratis):</p>
+        <p class="mt-1 text-[11px] text-zinc-400">Ajustes › Accesibilidad › Contenido leído › Voces › Español (México) › elige una voz y descarga la versión “Mejorada” o “Premium”. Luego cierra y abre la app y selecciónala aquí.</p>
+      </div>
+      <button id="expBtn" class="btn btn-neon w-full">Exportar respaldo (.json)</button>
+      <label class="btn btn-ghost w-full cursor-pointer">Importar respaldo<input id="impFile" type="file" accept="application/json,.json" class="hidden"></label>
+      <button id="resetAll" class="btn w-full border border-blood/60 text-blood">Borrar todos los datos</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+/* ==================== UTILIDADES ==================== */
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const money = n => '$' + Math.round(n).toLocaleString('es-MX');
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const todayISO = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
+const parseISO = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const fdate = s => parseISO(s).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const daysUntil = d => Math.ceil((d - new Date(new Date().toDateString())) / 864e5);
+const mmss = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+
+const S = {
+  get(k, d) { try { const v = localStorage.getItem('rr_' + k); return v ? JSON.parse(v) : d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem('rr_' + k, JSON.stringify(v)); } catch { toast('No se pudo guardar en este navegador'); } }
+};
+let toastT;
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.remove('hidden'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.add('hidden'), 2200); }
+function flash(color) { const f = $('#flashLayer'); f.style.background = color; f.classList.remove('flash'); void f.offsetWidth; f.classList.add('flash'); }
+
+/* ==================== AUDIO Y VOZ ==================== */
+let AC;
+function ac() {
+  if (!AC) {
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch {}
+  }
+  if (AC.state === 'suspended') AC.resume();
+  return AC;
+}
+function tone(freq, dur, when = 0, type = 'sine', vol = .5) {
+  const a = ac(), o = a.createOscillator(), g = a.createGain(), t = a.currentTime + when;
+  o.type = type; o.frequency.value = freq;
+  g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + .01); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  o.connect(g).connect(a.destination); o.start(t); o.stop(t + dur + .05);
+}
+const bell = (n = 1) => { for (let i = 0; i < n; i++) { const w = i * .45; tone(880, 1.3, w, 'sine', .6); tone(1320, 1, w, 'sine', .25); tone(2210, .5, w, 'triangle', .12); } };
+const clapper = () => { tone(1900, .07, 0, 'square', .25); tone(1900, .07, .14, 'square', .25); };
+const beep = (f = 1000, d = .14, v = .22) => tone(f, d, 0, 'square', v);
+/* ---- Voz del entrenador: elige la voz más natural disponible en el iPhone ---- */
+const VOICE = { list: [], name: S.get('voiceName', ''), rate: S.get('voiceRate', 1) };
+const BAD_VOICE = /eloquence|grandma|grandpa|abuel|shelley|rocko|reed|sandy|\bflo\b|eddy|bad news|bahh|bells|boing|bubbles|cellos|good news|jester|organ|superstar|trinoids|whisper|wobble|zarvox|albert|\bfred\b|junior|kathy|ralph/i;
+function voiceScore(v) {
+  const l = (v.lang || '').toLowerCase().replace('_', '-');
+  if (!l.startsWith('es') || BAD_VOICE.test(v.name)) return -1;
+  let sc = l === 'es-mx' ? 30 : l === 'es-us' ? 24 : l === 'es-419' ? 22 : 12;
+  if (/premium/i.test(v.name)) sc += 50; else if (/enhanced|mejorad/i.test(v.name)) sc += 40;
+  if (/siri/i.test(v.name)) sc += 35;
+  return sc;
+}
+const voiceTag = n => /premium/i.test(n) ? ' · Premium' : /enhanced|mejorad/i.test(n) ? ' · Mejorada' : '';
+function pickVoice() { return VOICE.list.find(v => v.name === VOICE.name) || VOICE.list[0] || null; }
+function renderVoicePicker() {
+  const el = $('#voiceSel'); if (!el) return;
+  el.innerHTML = VOICE.list.length ? VOICE.list.map(v => `<option value="${esc(v.name)}">${esc(v.name)}${voiceTag(v.name)} (${v.lang})</option>`).join('') : '<option value="">Voz predeterminada del sistema</option>';
+  const cur = pickVoice(); if (cur) el.value = cur.name;
+  const hasGood = VOICE.list.some(v => /premium|enhanced|mejorad|siri/i.test(v.name));
+  $('#voiceHint').classList.toggle('hidden', hasGood);
+}
+function loadVoices() {
+  if (!('speechSynthesis' in window)) return;
+  VOICE.list = speechSynthesis.getVoices().filter(v => voiceScore(v) >= 0).sort((a, b) => voiceScore(b) - voiceScore(a));
+  renderVoicePicker();
+}
+if ('speechSynthesis' in window) { speechSynthesis.onvoiceschanged = loadVoices; loadVoices(); setTimeout(loadVoices, 1000); }
+function say(text) {
+  if (!('speechSynthesis' in window) || !text) return;
+  const u = new SpeechSynthesisUtterance(text), v = pickVoice();
+  if (v) { u.voice = v; u.lang = v.lang; } else u.lang = 'es-MX';
+  u.rate = VOICE.rate; u.pitch = 1;
+  speechSynthesis.cancel(); speechSynthesis.speak(u);
+}
+const LINES = {
+  start: ['Listo, campeón. Guardia arriba y a trabajar.', 'Aquí estoy contigo. Manos arriba.', 'Vamos a darle. Guardia arriba.'],
+  guard: ['Sube esas manos', 'Manos arriba, cuida la cara', 'Guardia arriba, campeón', 'Protege la barbilla'],
+  elbows: ['Cierra los codos', 'Codos pegados, cuida las costillas', 'Junta los codos al cuerpo'],
+  prep: ['Prepárate', 'Ponte en posición, ya casi empezamos', 'Guardia lista, arrancamos'],
+  ten: ['Diez segundos, ¡cierra fuerte!', 'Últimos diez, ¡con todo!', 'Diez segundos, ¡no aflojes!'],
+  rest: ['Tiempo. Respira profundo y suelta los hombros.', 'Descanso. Toma agua a sorbitos.', 'Buen round. Respira por la nariz.'],
+  round: ['Round {n}. {t}', 'Vamos con el round {n}. {t}', 'Round {n}, a trabajar. {t}'],
+  done: ['¡Terminamos! Gran trabajo hoy. Anota cómo te sentiste.', 'Rutina completa, campeón. Regístralo en tu diario.'],
+  target: ['¡Meta cumplida, gran trabajo!', '¡Lo lograste! Así se hace.', '¡Meta cumplida! Sigue así.'],
+  hold: ['Tiempo cumplido, excelente.', '¡Lo aguantaste! Muy bien.'],
+  good: ['¡Eso es!', 'Muy bien', '¡Así!', 'Buena', 'Excelente'],
+  test: ['¡Hola, campeón! Así sonará tu entrenador. Guardia arriba y a trabajar.'],
+  calib: ['Ponte en tu guardia correcta y quédate quieto tres segundos.'],
+  calibOk: ['Listo, ya conozco tu guardia. ¡A entrenar!']
+};
+const line = (k, vars = {}) => { const a = LINES[k]; let t = a[Math.floor(Math.random() * a.length)]; Object.entries(vars).forEach(([q, v]) => { t = t.replace('{' + q + '}', v); }); return t; };
+const roundSay = (rd, i) => { const m = rd.t.match(/^(?:Round \d+|Fase \d+) · (.*)$/); return line('round', { n: i + 1, t: m ? m[1] : rd.t }); };
+$('#voiceSel').onchange = e => { VOICE.name = e.target.value; S.set('voiceName', VOICE.name); say(line('test')); };
+$('#voiceRate').value = VOICE.rate;
+$('#voiceRate').oninput = e => { VOICE.rate = +e.target.value; S.set('voiceRate', VOICE.rate); };
+$('#voiceTest').onclick = () => { ac(); say(line('test')); };
+let wakeLock = null;
+async function keepAwake(on) {
+  try {
+    if (on && 'wakeLock' in navigator && !wakeLock) { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => wakeLock = null); }
+    if (!on && wakeLock) { await wakeLock.release(); wakeLock = null; }
+  } catch {}
+}
+
+/* ==================== NAVEGACIÓN ==================== */
+const TABS = [
+  { id: 'ia', label: 'Cámara', icon: '<circle cx="12" cy="5" r="2.5"/><path d="M12 8v7M6 10l6-2 6 2M8 21l4-6 4 6"/>' },
+  { id: 'tecnica', label: 'Técnica', icon: '<path d="M7 11V7a4 4 0 0 1 4-4h3a4 4 0 0 1 4 4v6a5 5 0 0 1-5 5H9l-1 3H6l-.5-4A4 4 0 0 1 7 11z"/><path d="M7 11h5"/>' },
+  { id: 'timer', label: 'Reloj', icon: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M10 2h4"/>' },
+  { id: 'plan', label: 'Plan', icon: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>' },
+  { id: 'ahorro', label: 'Ahorro', icon: '<path d="M20 12V8H6a2 2 0 0 1 0-4h12v4"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/>' },
+  { id: 'diario', label: 'Diario', icon: '<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>' },
+  { id: 'perfil', label: 'Perfil', icon: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>' }
+];
+$('#nav').innerHTML = TABS.map(t => `
+  <button data-tab="${t.id}" class="navbtn flex flex-col items-center gap-0.5 py-2 text-[10px] font-semibold text-zinc-500">
+    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${t.icon}</svg>${t.label}
+  </button>`).join('');
+function show(id) {
+  $$('.tab').forEach(s => s.classList.toggle('hidden', s.id !== 'tab-' + id));
+  $$('.navbtn').forEach(b => { const on = b.dataset.tab === id; b.classList.toggle('text-neon', on); b.classList.toggle('text-zinc-500', !on); });
+  S.set('tab', id);
+  if (id !== 'ia' && cam.running) stopCam();
+  if (id === 'diario') requestAnimationFrame(() => { drawDiaryChart(); drawEvChart(); });
+  if (id === 'perfil') renderProfile();
+  window.scrollTo(0, 0);
+}
+$('#nav').addEventListener('click', e => { const b = e.target.closest('.navbtn'); if (b) show(b.dataset.tab); });
+
+/* ==================== 1. COACH IA (MediaPipe Pose) ==================== */
+const MP_VER = '0.10.14';
+const MP_URL = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MP_VER}/vision_bundle.mjs`;
+const MP_WASM = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MP_VER}/wasm`;
+const MP_MODEL = 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task';
+
+const iaCfg = Object.assign({ sound: true, voice: true, line: 'chin', elbow: 1, facing: 'user', mode: 'guard', targets: {} }, S.get('iaCfg', {}));
+const cam = { running: false, stream: null, landmarker: null, raf: 0, lastVideoT: -1, lastFrame: 0, fpsAcc: [], 
+  session: null, lowSince: { L: 0, R: 0 }, elbowSince: 0, lastAlertSound: 0, lastVoice: 0, state: { low: false, elbows: false } };
+const video = $('#video'), canvas = $('#overlay'), ctx = canvas.getContext('2d');
+
+function syncIaUi() {
+  $('#iaSound').textContent = 'Sonido: ' + (iaCfg.sound ? 'sí' : 'no');
+  $('#iaVoice').textContent = 'Voz: ' + (iaCfg.voice ? 'sí' : 'no');
+  $('#flipCam').textContent = 'Cámara: ' + (iaCfg.facing === 'user' ? 'frontal' : 'trasera');
+  $('#guardLine').value = iaCfg.line;
+  $('#elbowTol').value = iaCfg.elbowDeg ?? 40; $('#elbowVal').textContent = (iaCfg.elbowDeg ?? 40) + '°';
+  $('#calibInfo').textContent = iaCfg.calib ? `Calibrado el ${fdate(iaCfg.calib.date)}: con tu guardia correcta tus codos marcan ${iaCfg.calib.elbow}°.` : 'Sin calibrar todavía: enciende la cámara y toca “Calibrar mi guardia”.';
+  video.classList.toggle('mirror', iaCfg.facing === 'user'); canvas.classList.toggle('mirror', iaCfg.facing === 'user');
+  syncModeUi();
+  S.set('iaCfg', iaCfg);
+}
+$('#iaSound').onclick = () => { iaCfg.sound = !iaCfg.sound; syncIaUi(); };
+$('#iaVoice').onclick = () => { iaCfg.voice = !iaCfg.voice; syncIaUi(); };
+$('#guardLine').onchange = e => { iaCfg.line = e.target.value; syncIaUi(); };
+$('#elbowTol').oninput = e => { iaCfg.elbowDeg = +e.target.value; syncIaUi(); };
+$('#flipCam').onclick = async () => { iaCfg.facing = iaCfg.facing === 'user' ? 'environment' : 'user'; syncIaUi(); if (cam.running) { stopStream(); await openStream(); } };
+$('#camBtn').onclick = () => cam.running ? stopCam() : startCam();
+
+async function loadModel() {
+  if (cam.landmarker) return;
+  const { FilesetResolver, PoseLandmarker } = await import(MP_URL);
+  const files = await FilesetResolver.forVisionTasks(MP_WASM);
+  const opts = d => ({ baseOptions: { modelAssetPath: MP_MODEL, delegate: d }, runningMode: 'VIDEO', numPoses: 1, minPoseDetectionConfidence: .5, minTrackingConfidence: .5 });
+  try { cam.landmarker = await PoseLandmarker.createFromOptions(files, opts('GPU')); }
+  catch { cam.landmarker = await PoseLandmarker.createFromOptions(files, opts('CPU')); }
+}
+async function openStream() {
+  cam.stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: iaCfg.facing, width: { ideal: 640 }, height: { ideal: 480 } } });
+  video.srcObject = cam.stream;
+  await video.play();
+}
+function stopStream() { cam.stream?.getTracks().forEach(t => t.stop()); cam.stream = null; video.srcObject = null; }
+
+async function startCam() {
+  ac();
+  if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) { toast('La cámara requiere HTTPS (GitHub Pages lo tiene)'); return; }
+  $('#camIdle').classList.add('hidden');
+  $('#camLoading').classList.replace('hidden', 'flex');
+  $('#camBtnTxt').textContent = 'Cargando…';
+  try {
+    await openStream();
+    await loadModel();
+  } catch (err) {
+    console.error(err);
+    stopStream();
+    $('#camLoading').classList.replace('flex', 'hidden'); $('#camIdle').classList.remove('hidden');
+    $('#camBtnTxt').textContent = 'Encender';
+    toast(err?.name === 'NotAllowedError' ? 'Permiso de cámara denegado. Actívalo en Ajustes › Safari › Cámara' : 'No se pudo iniciar la cámara o el modelo');
+    return;
+  }
+  $('#camLoading').classList.replace('flex', 'hidden');
+  cam.running = true; cam.lastVideoT = -1; cam.lastFrame = performance.now();
+  cam.session = { start: Date.now(), up: 0, down: 0, alerts: 0, guardAlerts: 0, elbowAlerts: 0 };
+  cam.state = { low: false, elbows: false };
+  resetEx();
+  $('#camBtnTxt').textContent = 'Apagar'; $('#camBtn').classList.replace('btn-neon', 'btn-red');
+  $('#camWrap').classList.add('camfull'); lockScroll(); syncModeUi();
+  keepAwake(true);
+  if (iaCfg.voice) say(line('start'));
+  loop();
+}
+function stopCam() {
+  if (cam.running) autoSaveEx();
+  cam.running = false; cancelAnimationFrame(cam.raf); stopStream(); keepAwake(false);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  $('#camIdle').classList.remove('hidden');
+  $('#camBtnTxt').textContent = 'Encender'; $('#camBtn').classList.replace('btn-red', 'btn-neon');
+  $('#alertBox').innerHTML = ''; $('#camWrap').classList.remove('alarm'); $('#camWrap').style.borderColor = '';
+  $('#camWrap').classList.remove('camfull'); cam.calib = null; lockScroll();
+}
+
+const CONN = [[11, 12], [11, 13], [13, 15], [12, 14], [14, 16], [11, 23], [12, 24], [23, 24]];
+const KEY = [0, 2, 5, 9, 10, 11, 12, 13, 14, 15, 16];
+function loop() {
+  if (!cam.running) return;
+  cam.raf = requestAnimationFrame(loop);
+  if (video.readyState < 2 || video.currentTime === cam.lastVideoT) return;
+  cam.lastVideoT = video.currentTime;
+  const now = performance.now(), dt = Math.min((now - cam.lastFrame) / 1000, .25); cam.lastFrame = now;
+  cam.fpsAcc.push(dt); if (cam.fpsAcc.length > 20) cam.fpsAcc.shift();
+  if (canvas.width !== video.videoWidth) { canvas.width = video.videoWidth; canvas.height = video.videoHeight; }
+  let res;
+  try { res = cam.landmarker.detectForVideo(video, now); } catch { return; }
+  const lm = res?.landmarks?.[0];
+  analyze(lm, dt, now);
+  updateIaStats();
+}
+
+function analyze(lm, dt, now) {
+  if (exMode()) return analyzeEx(lm, dt, now);
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  if (!lm) { renderAlerts(['Sin cuerpo detectado: aléjate y deja ver hombros, cara y cadera'], 'info'); setHud(null, null, ''); return; }
+  const v = i => (lm[i].visibility ?? 1) > .5;
+  const P = i => ({ x: lm[i].x * W, y: lm[i].y * H });
+
+  // Línea de guardia: ojos, barbilla estimada o tu guardia calibrada
+  const eyesY = (lm[2].y + lm[5].y) / 2, mouthY = (lm[9].y + lm[10].y) / 2;
+  const chinY = mouthY + (mouthY - lm[0].y) * 0.9;
+  const shN = Math.abs(lm[11].x - lm[12].x) || .1;
+  const useCal = iaCfg.line === 'calib' && iaCfg.calib;
+  const off = i => (lm[i].y - chinY) / shN;
+  const lineY = useCal ? chinY + (iaCfg.calib.hand + .35) * shN : iaCfg.line === 'eyes' ? eyesY : chinY;
+  const isLow = i => useCal ? off(i) > iaCfg.calib.hand + .35 : lm[i].y > lineY + .015;
+  const lowL = v(15) ? isLow(15) : null, lowR = v(16) ? isLow(16) : null;
+
+  // Codos: ángulo entre el brazo (hombro→codo) y el costado (hombro→cadera).
+  // Pegados al cuerpo ≈ 5–25°; abiertos (“alas de pollo”) > 40°.
+  // Si el codo apunta hacia la cámara, el brazo se ve muy corto: se considera cerrado.
+  const swPx = Math.hypot(P(11).x - P(12).x, P(11).y - P(12).y) || 1;
+  const abd = (si, ei, hi) => {
+    if (!v(si) || !v(ei)) return null;
+    const S0 = P(si), E0 = P(ei), Hp = v(hi) ? P(hi) : { x: S0.x, y: S0.y + swPx };
+    if (Math.hypot(E0.x - S0.x, E0.y - S0.y) < swPx * .28) return 0;
+    return angDeg(E0, S0, Hp);
+  };
+  const angL = abd(11, 13, 23), angR = abd(12, 14, 24), eMax = iaCfg.elbowDeg ?? 40;
+  const openL = angL != null && angL > eMax, openR = angR != null && angR > eMax;
+  const elbowsOpen = angL == null && angR == null ? null : openL || openR;
+  const info = `codos ${angL == null ? '–' : Math.round(angL) + '°'} / ${angR == null ? '–' : Math.round(angR) + '°'} · máx ${eMax}°`;
+
+  // Calibración: 3 s en tu guardia correcta
+  if (cam.calib) {
+    const C = cam.calib;
+    if (now >= C.from) { if (angL != null) C.a.push(angL); if (angR != null) C.a.push(angR); if (v(15)) C.h.push(off(15)); if (v(16)) C.h.push(off(16)); }
+    renderAlerts([now < C.from ? 'Ponte en tu guardia correcta…' : `Calibrando… quédate quieto (${Math.max(1, Math.ceil((C.until - now) / 1000))})`], 'info');
+    if (now >= C.until) {
+      cam.calib = null;
+      if (C.a.length >= 10 && C.h.length >= 10) {
+        const q75 = a => a.slice().sort((x, y) => x - y)[Math.floor(a.length * .75)];
+        const baseA = q75(C.a), baseH = q75(C.h);
+        iaCfg.elbowDeg = Math.round(Math.min(75, Math.max(30, baseA + 15)));
+        iaCfg.calib = { hand: baseH, elbow: Math.round(baseA), date: todayISO() }; iaCfg.line = 'calib';
+        syncIaUi(); toast(`Calibrado: tus codos marcan ${Math.round(baseA)}°. Alerta desde ${iaCfg.elbowDeg}°`);
+        if (iaCfg.voice) say(line('calibOk'));
+      } else toast('No te vi bien: intenta con más luz y el cuerpo completo en cuadro');
+    }
+    setHud(lowL, lowR, info);
+    drawGuard(lm, v, P, lineY * H, false, false, lowL, lowR, false);
+    return;
+  }
+
+  // Filtro anti-parpadeo: la condición debe sostenerse un momento
+  const HOLD = iaCfg.ghost ? 500 : 350;
+  cam.lowSince.L = lowL ? (cam.lowSince.L || now) : 0;
+  cam.lowSince.R = lowR ? (cam.lowSince.R || now) : 0;
+  cam.elbowSince = elbowsOpen ? (cam.elbowSince || now) : 0;
+  const guardBad = (cam.lowSince.L && now - cam.lowSince.L > HOLD) || (cam.lowSince.R && now - cam.lowSince.R > HOLD);
+  const elbowBad = cam.elbowSince && now - cam.elbowSince > HOLD + 250;
+
+  if (lowL !== null || lowR !== null) { if (guardBad) cam.session.down += dt; else cam.session.up += dt; }
+  if (guardBad && !cam.state.low) { cam.session.alerts++; cam.session.guardAlerts++; alertFx(line('guard')); }
+  if (elbowBad && !cam.state.elbows) { cam.session.alerts++; cam.session.elbowAlerts++; alertFx(line('elbows')); }
+  cam.state.low = !!guardBad; cam.state.elbows = !!elbowBad;
+
+  const msgs = [];
+  if (guardBad) msgs.push('¡CUIDADO: Guardia Baja! Sube las manos');
+  if (elbowBad) msgs.push('¡CIERRA LOS CODOS! Protege tus costillas');
+  renderAlerts(msgs, 'bad');
+  const wrap = $('#camWrap');
+  wrap.classList.toggle('alarm', msgs.length > 0);
+  wrap.style.borderColor = msgs.length ? '' : '#22c55e';
+  setHud(lowL, lowR, info);
+  drawGuard(lm, v, P, lineY * H, guardBad, elbowBad, lowL, lowR, openL || openR, openL, openR);
+}
+function drawGuard(lm, v, P, ly, guardBad, elbowBad, lowL, lowR, anyOpen, openL, openR) {
+  const W = canvas.width;
+  ctx.setLineDash([10, 8]); ctx.lineWidth = 3; ctx.strokeStyle = guardBad ? '#ff2d3d' : '#e6ff00';
+  ctx.beginPath(); ctx.moveTo(0, ly); ctx.lineTo(W, ly); ctx.stroke(); ctx.setLineDash([]);
+  ctx.lineWidth = 5; ctx.lineCap = 'round';
+  CONN.forEach(([a, b]) => {
+    if (!v(a) || !v(b)) return;
+    const isArm = [13, 14, 15, 16].includes(b);
+    ctx.strokeStyle = isArm && (elbowBad || guardBad) ? '#ff2d3d' : 'rgba(230,255,0,.9)';
+    const A = P(a), B = P(b); ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(B.x, B.y); ctx.stroke();
+  });
+  KEY.forEach(i => {
+    if (!v(i)) return;
+    const p = P(i); let col = '#ffffff', r = 6;
+    if (i === 15) { col = lowL ? '#ff2d3d' : '#22c55e'; r = 11; }
+    if (i === 16) { col = lowR ? '#ff2d3d' : '#22c55e'; r = 11; }
+    if (i === 13) { col = openL ? '#ff2d3d' : '#22c55e'; r = 9; }
+    if (i === 14) { col = openR ? '#ff2d3d' : '#22c55e'; r = 9; }
+    ctx.fillStyle = col; ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#0a0a0b'; ctx.lineWidth = 2; ctx.stroke();
+  });
+}
+function startCalib() {
+  if (!cam.running) { toast('Enciende la cámara primero'); return; }
+  if (exMode()) { iaCfg.mode = 'guard'; resetEx(); syncIaUi(); }
+  const n = performance.now(); cam.calib = { from: n + 1500, until: n + 4500, a: [], h: [] };
+  if (iaCfg.voice) say(line('calib'));
+}
+function alertFx(voiceTxt) {
+  const n = Date.now();
+  if (iaCfg.sound && n - cam.lastAlertSound > 1200) { beep(520, .18, .3); setTimeout(() => beep(520, .18, .3), 220); cam.lastAlertSound = n; }
+  if (iaCfg.voice && n - cam.lastVoice > 3500) { say(voiceTxt); cam.lastVoice = n; }
+}
+let lastAlertHtml = '';
+function renderAlerts(msgs, kind) {
+  const html = msgs.map(m => kind === 'bad'
+    ? `<div class="blink rounded-xl bg-blood px-3 py-2 text-center text-sm font-extrabold text-white shadow-lg">${m}</div>`
+    : `<div class="rounded-xl bg-black/70 px-3 py-2 text-center text-xs font-semibold text-zinc-300">${m}</div>`).join('');
+  if (html !== lastAlertHtml) { $('#alertBox').innerHTML = html; lastAlertHtml = html; }
+}
+function setHud(l, r, ratio) {
+  const t = x => x === null || x === undefined ? '–' : x ? 'BAJA' : 'OK';
+  const c = x => x ? 'text-blood' : x === false ? 'text-go' : 'text-zinc-400';
+  const L = $('#hudL'), R = $('#hudR');
+  L.textContent = 'Mano izq: ' + t(l); L.className = 'rounded-lg bg-black/70 px-2 py-1 ' + c(l);
+  R.textContent = 'Mano der: ' + t(r); R.className = 'rounded-lg bg-black/70 px-2 py-1 ' + c(r);
+  const avg = cam.fpsAcc.reduce((a, b) => a + b, 0) / (cam.fpsAcc.length || 1);
+  $('#hudFps').textContent = (avg ? Math.round(1 / avg) : 0) + ' cuadros/s' + (ratio ? ' · ' + ratio : '');
+}
+function updateIaStats() {
+  if (exMode()) return updateExStats();
+  const s = cam.session; if (!s) return;
+  const tot = s.up + s.down;
+  $('#stGuard').textContent = tot > 1 ? Math.round(s.up / tot * 100) + '%' : '–';
+  $('#stAlerts').textContent = s.alerts;
+  $('#stTime').textContent = mmss((Date.now() - s.start) / 1000);
+  setFs($('#stGuard').textContent, 'GUARDIA ARRIBA', s.alerts, 'ALERTAS', $('#stTime').textContent, 'TIEMPO');
+}
+$('#saveIa').onclick = () => {
+  if (exMode()) return saveEx(false);
+  const s = cam.session;
+  if (!s || s.up + s.down < 10) { toast('Haz al menos 10 s de sombra con la cámara encendida'); return; }
+  const tot = s.up + s.down;
+  const list = S.get('ia', []);
+  list.unshift({ id: uid(), date: todayISO(), dur: Math.round((Date.now() - s.start) / 1000), pct: Math.round(s.up / tot * 100), guard: s.guardAlerts, elbow: s.elbowAlerts });
+  S.set('ia', list.slice(0, 60));
+  cam.session = { start: Date.now(), up: 0, down: 0, alerts: 0, guardAlerts: 0, elbowAlerts: 0 };
+  renderIaHistory(); toast('Sesión de IA guardada');
+};
+function renderIaHistory() {
+  if (exMode()) return renderExHistory();
+  const list = S.get('ia', []);
+  if (!list.length) { $('#iaHistory').innerHTML = '<p class="text-xs text-zinc-500">Aún no hay sesiones guardadas.</p>'; return; }
+  const best = Math.max(...list.map(x => x.pct));
+  $('#iaHistory').innerHTML = `<p class="text-xs text-zinc-400">Mejor guardia registrada: <b class="text-neon">${best}%</b></p>` + list.slice(0, 8).map(x => `
+    <div class="flex items-center justify-between rounded-xl bg-steel px-3 py-2 text-sm">
+      <div><b>${fdate(x.date)}</b> <span class="text-zinc-400">· ${mmss(x.dur)}</span></div>
+      <div class="flex items-center gap-3 text-xs"><span class="text-zinc-400">G:${x.guard} C:${x.elbow}</span>
+      <span class="font-display text-xl ${x.pct >= 90 ? 'text-go' : x.pct >= 70 ? 'text-neon' : 'text-blood'}">${x.pct}%</span>
+      <button data-del="${x.id}" class="iadel text-zinc-500" aria-label="Borrar">✕</button></div>
+    </div>`).join('');
+}
+$('#iaHistory').addEventListener('click', e => { const b = e.target.closest('.iadel'); if (!b) return; S.set('ia', S.get('ia', []).filter(x => x.id !== b.dataset.del)); renderIaHistory(); });
+
+/* ==================== TÉCNICA: animaciones tipo GIF de golpes, guardia y defensa ==================== */
+/* Esqueleto 3D (x lateral, y vertical hacia abajo, z hacia el rival) proyectado en vista espejo, 3/4 o lateral */
+const J = ['head', 'lS', 'rS', 'lE', 'rE', 'lW', 'rW', 'lH', 'rH', 'lK', 'rK', 'lA', 'rA'];
+const UPPER = ['head', 'lS', 'rS', 'lE', 'rE', 'lW', 'rW'];
+const BASE = { head: [0, 18, 2], lS: [-20, 46, 6], rS: [20, 46, -6], lE: [-23, 68, 18], rE: [19, 68, 6], lW: [-12, 34, 28], rW: [9, 33, 16], lH: [-12, 104, 4], rH: [12, 104, -4], lK: [-18, 147, 32], rK: [22, 147, -6], lA: [-19, 190, 32], rA: [23, 188, -26] };
+const PARALLEL = { lA: [-14, 190, 2], rA: [14, 190, -2], lK: [-14, 147, 9], rK: [14, 147, 3], lH: [-12, 104, 2], rH: [12, 104, -2], lS: [-20, 46, 2], rS: [20, 46, -2] };
+const addJ = (p, js, d) => js.forEach(j => { p[j] = [p[j][0] + d[0], p[j][1] + d[1], p[j][2] + d[2]]; });
+function mk(over = {}, o = {}) {
+  const p = {}; J.forEach(j => p[j] = [...(over[j] || BASE[j])]);
+  if (o.dip) { addJ(p, UPPER, [0, o.dip, 0]); addJ(p, ['lH', 'rH'], [0, o.dip, 0]); addJ(p, ['lK', 'rK'], [0, o.dip * .5, o.dip * .25]); }
+  if (o.up) addJ(p, UPPER, o.up);
+  if (o.hip) addJ(p, ['lH', 'rH'], o.hip);
+  if (o.all) addJ(p, J, o.all);
+  return p;
+}
+const ROPE_HANDS = { lW: [-24, 94, 14], rW: [24, 94, 4], lE: [-26, 72, 6], rE: [26, 72, -2] };
+const PO = {
+  G: mk(), GL: mk({}, { dip: 4 }),
+  JAB: mk({ lS: [-16, 45, 16], rS: [21, 47, -12], lE: [-10, 40, 44], lW: [-4, 36, 72], head: [3, 19, 0] }),
+  JABB: mk({ lS: [-16, 46, 16], rS: [21, 47, -12], lE: [-10, 52, 44], lW: [-4, 64, 68], head: [4, 20, 0] }, { dip: 12 }),
+  CROSS: mk({ rS: [13, 45, 12], lS: [-20, 47, 0], rE: [5, 40, 40], rW: [-3, 36, 68], lE: [-23, 66, 14], lW: [-12, 33, 24], rH: [10, 104, 4], lH: [-12, 104, -2], rK: [16, 147, 1], rA: [23, 185, -26], head: [-4, 19, 8] }),
+  HLL: mk({ lS: [-19, 47, 8], lE: [-36, 52, 22], lW: [-38, 40, 46] }, { dip: 2 }),
+  HL: mk({ lS: [-15, 46, 12], rS: [19, 47, -12], lE: [-40, 46, 28], lW: [-12, 42, 50], lH: [-11, 104, 8], rH: [12, 104, -8], lK: [-12, 147, 32], head: [4, 20, 0] }),
+  HRL: mk({ rS: [19, 47, -2], rE: [36, 52, 12], rW: [38, 40, 36] }, { dip: 2 }),
+  HR: mk({ rS: [14, 46, 10], lS: [-20, 47, -2], rE: [38, 46, 22], rW: [12, 42, 44], rH: [10, 104, 4], lH: [-12, 104, -2], rK: [16, 147, 1], rA: [23, 185, -26], head: [-4, 20, 6] }),
+  ULL: mk({ lE: [-24, 76, 20], lW: [-18, 64, 30], head: [-3, 18, 2] }, { dip: 10 }),
+  UL: mk({ lS: [-17, 43, 12], lE: [-16, 56, 34], lW: [-8, 28, 40], head: [3, 16, 2] }),
+  URL: mk({ rE: [20, 76, 8], rW: [14, 64, 22] }, { dip: 10 }),
+  UR: mk({ rS: [14, 43, 10], lS: [-20, 47, 0], rE: [10, 56, 32], rW: [2, 28, 38], rH: [10, 104, 4], rK: [16, 147, 1], rA: [23, 185, -26], head: [-3, 16, 6] }),
+  SR: mk({ rS: [20, 50, -6] }, { up: [14, 8, 2], dip: 6 }),
+  SL: mk({ lS: [-20, 50, 6] }, { up: [-14, 8, 4], dip: 6 }),
+  R1: mk({}, { up: [10, 12, 2], dip: 12 }), R2: mk({}, { up: [0, 22, 6], dip: 20 }), R3: mk({}, { up: [-10, 12, 2], dip: 12 }),
+  BLK: mk({ lW: [-8, 20, 26], lE: [-16, 56, 22], rW: [8, 20, 22], rE: [16, 56, 16], head: [0, 24, 0] }, { dip: 4 }),
+  PRY: mk({ rW: [-2, 40, 34], rE: [12, 62, 18] }),
+  F1: mk({ lA: [-19, 190, 46], lK: [-18, 147, 46] }, { up: [0, 0, 6], hip: [0, 0, 6] }),
+  F2: mk({}, { all: [0, 0, 14] }),
+  B1: mk({ rA: [23, 188, -40], rK: [22, 147, -20] }, { all: [0, 0, 14], up: [0, 0, -6], hip: [0, 0, -6] }),
+  L1: mk({ lA: [-33, 190, 32], lK: [-31, 147, 32] }, { up: [-5, 0, 0], hip: [-5, 0, 0] }),
+  L2: mk({}, { all: [-14, 0, 0] }),
+  L3: mk({ rA: [37, 188, -26], rK: [36, 147, -6] }, { all: [-14, 0, 0], up: [5, 0, 0], hip: [5, 0, 0] }),
+  RP1: mk({ ...PARALLEL, ...ROPE_HANDS }, { all: [0, -7, 0] }),
+  RP2: mk({ ...PARALLEL, ...ROPE_HANDS, lW: [-26, 98, 8], rW: [26, 98, -2] }, { dip: 3 }),
+  MFW: mk({ ...PARALLEL, lW: [-22, 46, 58], lE: [-21, 46, 32], rW: [22, 46, 54], rE: [21, 46, 28] }),
+  MUP: mk({ ...PARALLEL, lW: [-26, -8, 6], lE: [-24, 18, 6], rW: [26, -8, -6], rE: [24, 18, -6], head: [0, 18, 0] }),
+  MBK: mk({ ...PARALLEL, lW: [-26, 54, -44], lE: [-24, 52, -20], rW: [26, 54, -48], rE: [24, 52, -24] }),
+  MDN: mk({ ...PARALLEL, lW: [-28, 104, 4], lE: [-26, 76, 4], rW: [28, 104, -4], rE: [26, 76, -4] })
+};
+const f = (p, ms, cue) => ({ p: PO[p], ms, cue });
+const MOVES = [
+  { id: 'jab', n: '1', cat: 'Golpes', name: 'Jab', call: 'Jab',
+    desc: 'El golpe más importante del boxeo: mide la distancia, abre la defensa rival y prepara todo lo demás. Sale con la mano delantera.',
+    tips: ['Sale recto desde la guardia, sin echar la mano atrás.', 'Gira el puño al final: nudillos arriba, palma al suelo.', 'El hombro sube y cubre tu mentón.', 'La mano regresa más rápido de lo que salió.'],
+    fr: [f('G', 260, 'Guardia: listo'), f('G', 450), f('JAB', 150, '¡JAB! Recto, el puño gira'), f('JAB', 90, 'El hombro cubre el mentón'), f('G', 220, 'Regresa por el mismo camino'), f('G', 500, 'La derecha nunca baja')] },
+  { id: 'jab-cuerpo', n: '1↓', cat: 'Golpes', name: 'Jab al cuerpo', call: 'Jab abajo',
+    desc: 'El mismo jab dirigido al estómago para obligar al rival a bajar la guardia.',
+    tips: ['Baja doblando las rodillas, no inclinando la cintura.', 'La cabeza queda fuera de la línea central.', 'La derecha se queda pegada a la cara.'],
+    fr: [f('G', 260, 'Guardia'), f('G', 400), f('GL', 200, 'Baja con las piernas, no con la cintura'), f('JABB', 160, '¡Jab al cuerpo!'), f('JABB', 90), f('GL', 220, 'La derecha cubre la cara'), f('G', 220), f('G', 450)] },
+  { id: 'recto', n: '2', cat: 'Golpes', name: 'Recto de derecha', call: 'Recto',
+    desc: 'El golpe de poder de la mano trasera. La fuerza nace en el pie trasero y sube por la cadera.',
+    tips: ['Pivota el pie trasero como si apagaras una colilla.', 'Gira cadera y hombro juntos hacia el frente.', 'Mientras sale, la izquierda cubre tu cara.', 'No te inclines de más: la nariz no pasa la rodilla delantera.'],
+    fr: [f('G', 260, 'Guardia'), f('G', 450), f('CROSS', 160, '¡RECTO! Pivota el pie trasero'), f('CROSS', 90, 'Cadera y hombro giran'), f('G', 240, 'La izquierda cubre tu cara'), f('G', 500)] },
+  { id: 'gancho-izq', n: '3', cat: 'Golpes', name: 'Gancho de izquierda', call: 'Gancho de izquierda',
+    desc: 'Golpe circular corto con la mano delantera. Muy efectivo a corta distancia y al cerrar combinaciones.',
+    tips: ['Codo a la altura del puño, brazo en 90°.', 'El giro sale del pie delantero y la cadera, no del brazo.', 'Golpe corto: no abras el brazo hacia atrás para cargar.', 'La derecha protege el mentón todo el tiempo.'],
+    fr: [f('G', 260, 'Guardia'), f('G', 450), f('HLL', 150, 'Codo a la altura del puño'), f('HL', 150, '¡GANCHO! Gira cadera y pie delantero'), f('HL', 90), f('G', 250, 'Regresa a guardia'), f('G', 500)] },
+  { id: 'gancho-der', n: '4', cat: 'Golpes', name: 'Gancho de derecha', call: 'Gancho de derecha',
+    desc: 'Gancho con la mano trasera. Más potente pero más lento: úsalo después de un jab.',
+    tips: ['Pivota el pie trasero igual que en el recto.', 'Mantén el codo arriba, en línea con el puño.', 'Regresa de inmediato a la guardia.'],
+    fr: [f('G', 260, 'Guardia'), f('G', 450), f('HRL', 150, 'Codo arriba'), f('HR', 160, '¡GANCHO! Pivota el pie trasero'), f('HR', 90), f('G', 250, 'Regresa a guardia'), f('G', 500)] },
+  { id: 'upper-izq', n: '5', cat: 'Golpes', name: 'Uppercut de izquierda', call: 'Uppercut de izquierda',
+    desc: 'Golpe ascendente para atacar el mentón o el cuerpo cuando el rival está cerca o agachado.',
+    tips: ['Baja ligeramente la rodilla delantera para cargar.', 'Sube con las piernas, no solo con el brazo.', 'Palma hacia ti al impactar.', 'No bajes la mano antes de lanzar: es lo que te delata.'],
+    fr: [f('G', 260, 'Guardia'), f('G', 450), f('ULL', 220, 'Baja la rodilla delantera'), f('UL', 160, '¡UPPERCUT! Sube con las piernas'), f('UL', 90, 'Palma hacia ti'), f('G', 250, 'Regresa a guardia'), f('G', 500)] },
+  { id: 'upper-der', n: '6', cat: 'Golpes', name: 'Uppercut de derecha', call: 'Uppercut de derecha',
+    desc: 'Uppercut con la mano trasera, de los golpes más fuertes a corta distancia.',
+    tips: ['Baja la rodilla trasera y gira la cadera hacia adelante.', 'El puño sube por el centro, cerca de tu cuerpo.', 'La izquierda cubre la cara.'],
+    fr: [f('G', 260, 'Guardia'), f('G', 450), f('URL', 220, 'Baja la rodilla trasera'), f('UR', 160, '¡UPPERCUT! Gira la cadera'), f('UR', 90), f('G', 250, 'Regresa a guardia'), f('G', 500)] },
+
+  { id: 'guardia', n: '', cat: 'Guardia y pies', name: 'Guardia y postura', call: 'Guardia arriba',
+    desc: 'Tu escudo y tu base. Desde aquí sale cada golpe y aquí regresa cada mano.',
+    tips: ['Diestro: pie izquierdo adelante, pies al ancho de hombros.', 'Puños a la altura de los pómulos, codos cubriendo costillas.', 'Mentón abajo, mirada al frente.', 'Peso repartido 50/50, talón trasero ligeramente levantado.'],
+    fr: [f('G', 300, 'Puños a la altura de los pómulos'), f('GL', 450), f('G', 450, 'Codos pegados a las costillas'), f('GL', 450), f('G', 450, 'Mentón abajo, mirada al frente'), f('GL', 450), f('G', 450, 'Rebota suave sobre las puntas'), f('GL', 450)] },
+  { id: 'paso', n: '', cat: 'Guardia y pies', name: 'Paso adelante y atrás', call: 'Paso',
+    desc: 'El desplazamiento básico: nunca cruzas ni juntas los pies.',
+    tips: ['Para avanzar: empuja con el pie trasero y mueve primero el delantero.', 'Para retroceder: primero el pie trasero.', 'Pasos cortos, deslizando, sin saltar.', 'La guardia no se mueve mientras caminas.'],
+    fr: [f('G', 260, 'Guardia'), f('G', 300), f('F1', 260, 'Avanza: primero el pie delantero'), f('F2', 260, 'El trasero lo sigue'), f('F2', 300), f('B1', 260, 'Retrocede: primero el pie trasero'), f('G', 260, 'El delantero lo sigue'), f('G', 300)] },
+  { id: 'lateral', n: '', cat: 'Guardia y pies', name: 'Paso lateral', call: 'Lateral',
+    desc: 'Moverte a los lados te saca de la línea de ataque y te da ángulos para golpear.',
+    tips: ['Hacia la izquierda: primero el pie izquierdo.', 'Hacia la derecha: primero el pie derecho.', 'La distancia entre pies siempre es la misma.'],
+    fr: [f('G', 260, 'Guardia'), f('G', 300), f('L1', 260, 'Izquierda: primero el pie izquierdo'), f('L2', 260), f('L2', 300), f('L3', 260, 'Derecha: primero el pie derecho'), f('G', 260), f('G', 300)] },
+
+  { id: 'bloqueo', n: '', cat: 'Defensa', name: 'Bloqueo (cubrirse)', call: 'Cubre',
+    desc: 'Recibe el golpe en guantes y antebrazos cuando no alcanzas a esquivar.',
+    tips: ['Antebrazos verticales pegados a la cara.', 'Codos cerrados para proteger costillas.', 'Mentón abajo y ojos abiertos: mira entre los guantes.'],
+    fr: [f('G', 260, 'Guardia'), f('G', 400), f('BLK', 150, 'Cubre: antebrazos y guantes'), f('BLK', 500, 'Codos cerrados, mentón abajo'), f('G', 250, 'Regresa a guardia'), f('G', 400)] },
+  { id: 'parada', n: '', cat: 'Defensa', name: 'Parada de jab', call: 'Para',
+    desc: 'Desvía el jab del rival con la palma de la mano trasera y contraataca.',
+    tips: ['Movimiento corto con la palma, no un manotazo.', 'No estires el brazo para buscar el golpe.', 'Contraataca inmediatamente con 1-2.'],
+    fr: [f('G', 260, 'Guardia'), f('G', 400), f('PRY', 140, 'Desvía con la palma derecha'), f('PRY', 120), f('G', 200, 'Contraataca con 1-2'), f('G', 450)] },
+  { id: 'slip', n: '', cat: 'Defensa', name: 'Esquiva lateral', call: 'Esquiva',
+    desc: 'Saca la cabeza de la línea del golpe con un movimiento corto, quedando listo para contragolpear.',
+    tips: ['Dobla la rodilla del lado al que esquivas, no la cintura.', 'Movimiento corto: lo justo para que el golpe pase.', 'Guardia arriba durante todo el movimiento.'],
+    fr: [f('G', 260, 'Guardia'), f('G', 400), f('SR', 240, 'Esquiva afuera: dobla la rodilla'), f('SR', 180), f('G', 240, 'Regresa a guardia'), f('G', 350), f('SL', 240, 'Esquiva adentro'), f('SL', 180), f('G', 240, 'Regresa a guardia'), f('G', 400)] },
+  { id: 'roll', n: '', cat: 'Defensa', name: 'Rodada (esquiva en U)', call: 'Rueda',
+    desc: 'Pasa por debajo de un gancho con un movimiento en forma de U.',
+    tips: ['Baja con las piernas, espalda recta.', 'Dibuja una U: baja, cruza por debajo y sube del otro lado.', 'Nunca bajes la mirada al suelo.'],
+    fr: [f('G', 260, 'Guardia'), f('G', 400), f('R1', 220, 'Dobla las rodillas'), f('R2', 220, 'Pasa por debajo en U'), f('R3', 220), f('G', 280, 'Sube con la guardia arriba'), f('G', 450)] },
+
+  { id: '1-2', n: '1-2', cat: 'Combinaciones', name: 'Uno-dos', call: 'Uno, dos',
+    desc: 'La combinación base del boxeo: el jab abre y el recto castiga.',
+    tips: ['El 2 sale cuando el 1 ya está regresando.', 'Pivota el pie trasero en el 2.', 'Después del 2, sal en ángulo.'],
+    fr: [f('G', 260, 'Guardia'), f('G', 380), f('JAB', 150, 'UNO · jab'), f('JAB', 70), f('G', 180), f('CROSS', 160, 'DOS · recto, pivota el pie'), f('CROSS', 90), f('G', 240, 'Regresa a guardia'), f('G', 600)] },
+  { id: '1-2-3', n: '1-2-3', cat: 'Combinaciones', name: 'Uno-dos-tres', call: 'Uno, dos, tres',
+    desc: 'Agrega el gancho de izquierda al final aprovechando que tu cadera ya está girada.',
+    tips: ['El recto deja tu cadera cargada para el gancho.', 'El gancho es corto y cerrado.', 'Termina siempre con la guardia arriba.'],
+    fr: [f('G', 260, 'Guardia'), f('G', 380), f('JAB', 150, 'UNO'), f('JAB', 70), f('G', 180), f('CROSS', 160, 'DOS'), f('CROSS', 80), f('G', 200), f('HLL', 110, 'TRES · gancho'), f('HL', 150), f('HL', 80), f('G', 240, 'Guardia y sal de la línea'), f('G', 600)] },
+  { id: 'slip-slip-1-2', n: 'E-E-1-2', cat: 'Combinaciones', name: 'Esquiva, esquiva, uno-dos', call: 'Esquiva, esquiva, uno, dos',
+    desc: 'Esquiva el ataque y responde: la base del contragolpe.',
+    tips: ['Las esquivas son cortas y con las rodillas.', 'El 1-2 sale justo al regresar de la segunda esquiva.'],
+    fr: [f('G', 260, 'Guardia'), f('G', 300), f('SR', 220, 'Esquiva afuera'), f('G', 220), f('SL', 220, 'Esquiva adentro'), f('G', 220), f('JAB', 150, 'UNO'), f('G', 180), f('CROSS', 160, 'DOS'), f('CROSS', 80), f('G', 240, 'Guardia'), f('G', 500)] },
+  { id: 'rafaga', n: '1-2×3', cat: 'Combinaciones', name: 'Ráfaga de rectos', call: 'Ráfaga',
+    desc: 'Rectos continuos a máxima velocidad, como en los intervalos de martes y viernes.',
+    tips: ['Golpes cortos y rápidos, sin extender de más.', 'Exhala con cada golpe.', 'Al terminar, la guardia sube de inmediato.'],
+    fr: [f('G', 200, '¡RÁFAGA! 1-2 continuos'), f('JAB', 110), f('G', 120), f('CROSS', 110), f('G', 120), f('JAB', 110), f('G', 120), f('CROSS', 110), f('G', 120), f('JAB', 110), f('G', 120), f('CROSS', 110), f('G', 140, 'Guardia alta, respira'), f('GL', 300), f('G', 300)] },
+  { id: 'gancho-upper', n: '3-6', cat: 'Combinaciones', name: 'Gancho y uppercut', call: 'Tres, seis',
+    desc: 'Combinación de corta distancia: gancho de izquierda arriba y uppercut de derecha.',
+    tips: ['Pies firmes, golpes cortos.', 'El gancho abre, el uppercut entra por el centro.'],
+    fr: [f('G', 260, 'Guardia'), f('G', 300), f('HLL', 130, 'Gancho de izquierda'), f('HL', 150), f('HL', 70), f('G', 220), f('URL', 200, 'Baja la rodilla'), f('UR', 160, 'Uppercut de derecha'), f('UR', 80), f('G', 240, 'Codos a las costillas'), f('G', 550)] },
+
+  { id: 'cuerda', n: '', cat: 'Calentamiento', name: 'Saltar la cuerda', call: 'Cuerda', rope: true,
+    desc: 'El calentamiento rey del boxeo: ritmo, coordinación y pies ligeros.',
+    tips: ['Saltos bajos de 2–3 cm sobre la punta de los pies.', 'Las muñecas giran la cuerda, codos pegados.', 'Sin cuerda: simula el movimiento.'],
+    fr: [f('RP1', 210, 'Saltos bajos sobre las puntas'), f('RP2', 210)] },
+  { id: 'movilidad', n: '', cat: 'Calentamiento', name: 'Círculos de brazos', call: 'Movilidad',
+    desc: 'Calienta los hombros antes de golpear para prevenir lesiones.',
+    tips: ['10 círculos hacia atrás y 10 hacia adelante.', 'Movimiento amplio y lento.', 'Si duele, reduce el rango.'],
+    fr: [f('MFW', 700, 'Círculos de brazos hacia atrás'), f('MUP', 700), f('MBK', 700), f('MDN', 700)] }
+];
+const mv = id => MOVES.find(x => x.id === id);
+const CATS = ['Golpes', 'Ejercicios', 'Guardia y pies', 'Defensa', 'Combinaciones', 'Calentamiento'];
+const AMAP = { rope: 'cuerda', stretch: 'movilidad', walk: 'paso', jab: 'jab', onetwo: '1-2', slip: 'slip-slip-1-2', burst: 'rafaga', hook: 'gancho-upper', stance: 'guardia' };
+
+let PGID = 0;
+const SKIN = { n: ['#eab089', '#b97a52', '#5e3520'], f: ['#c98d66', '#93593a', '#432414'] };
+function drawPose(p, view = 'tres', x = {}) {
+  const th = view === 'side' ? Math.PI / 2 : view === 'tres' ? -.8 : 0, c = Math.cos(th), s = Math.sin(th), cx = 110 - 24 * s + (view === 'tres' ? -10 : 0);
+  const pr = v => [cx + v[0] * c + v[2] * s, v[1] + 16, -v[0] * s + v[2] * c];
+  const Q = {}; J.forEach(j => Q[j] = pr(p[j]));
+  const id = 'pg' + (++PGID) + '_'; let gi = 0;
+  const defs = [], it = [], put = (z, h) => it.push([z, h]), F = n => n.toFixed(1);
+  const mid = (A, B, t = .5) => [A[0] + (B[0] - A[0]) * t, A[1] + (B[1] - A[1]) * t, A[2] + (B[2] - A[2]) * t];
+  const lin = (A, B, stops) => { const g = id + (gi++); defs.push(`<linearGradient id="${g}" gradientUnits="userSpaceOnUse" x1="${F(A[0])}" y1="${F(A[1])}" x2="${F(B[0])}" y2="${F(B[1])}">${stops.map(([o, col]) => `<stop offset="${o}" stop-color="${col}"/>`).join('')}</linearGradient>`); return `url(#${g})`; };
+  const rad = (stops, cxp = .35, cyp = .3) => { const g = id + (gi++); defs.push(`<radialGradient id="${g}" cx="${cxp}" cy="${cyp}" r=".8">${stops.map(([o, col]) => `<stop offset="${o}" stop-color="${col}"/>`).join('')}</radialGradient>`); return `url(#${g})`; };
+  const cap = (A, B, ra, rb) => {
+    const dx = B[0] - A[0], dy = B[1] - A[1], L = Math.hypot(dx, dy) || .01, nx = -dy / L, ny = dx / L;
+    return { nx, ny, L, ang: Math.atan2(dy, dx) * 180 / Math.PI,
+      d: `M${F(A[0] + nx * ra)} ${F(A[1] + ny * ra)}L${F(B[0] + nx * rb)} ${F(B[1] + ny * rb)}A${F(rb)} ${F(rb)} 0 0 0 ${F(B[0] - nx * rb)} ${F(B[1] - ny * rb)}L${F(A[0] - nx * ra)} ${F(A[1] - ny * ra)}A${F(ra)} ${F(ra)} 0 0 0 ${F(A[0] + nx * ra)} ${F(A[1] + ny * ra)}Z` };
+  };
+  // Relleno sombreado a lo ancho de un segmento (luz arriba)
+  const shade = (A, B, k, r, pal) => { const up = k.ny < 0 ? 1 : -1, M = mid(A, B); return lin([M[0] + k.nx * r * up, M[1] + k.ny * r * up], [M[0] - k.nx * r * up, M[1] - k.ny * r * up], [[0, pal[0]], [.45, pal[1]], [1, pal[2]]]); };
+  const seg = (A, B, ra, rb, pal, z, muscle) => {
+    const k = cap(A, B, ra, rb);
+    let h = `<path d="${k.d}" fill="${shade(A, B, k, Math.max(ra, rb), pal)}"/>`;
+    if (muscle && k.L > 6) {
+      const up = k.ny < 0 ? 1 : -1, m = mid(A, B, .4), ex = m[0] + k.nx * ra * .3 * up, ey = m[1] + k.ny * ra * .3 * up;
+      h += `<ellipse cx="${F(ex)}" cy="${F(ey)}" rx="${F(k.L * .26)}" ry="${F(ra * .42)}" transform="rotate(${F(k.ang)} ${F(ex)} ${F(ey)})" fill="#fff" fill-opacity=".16"/>`;
+    }
+    put(z ?? (A[2] + B[2]) / 2, h); return k;
+  };
+  const near = side => (side === 'l' ? Q.lS[2] >= Q.rS[2] - 1 : Q.rS[2] >= Q.lS[2] - 1) ? SKIN.n : SKIN.f;
+  const PL = near('l'), PR = near('r');
+  const mS = mid(Q.lS, Q.rS), mH = mid(Q.lH, Q.rH);
+  const tz = (Q.lS[2] + Q.rS[2] + Q.lH[2] + Q.rH[2]) / 4 - 2;
+
+  /* ---- Torso: volumen lateral + silueta en V ---- */
+  const tGrad = lin([mS[0], mS[1] - 4], [mH[0], mH[1]], [[0, '#e2a47b'], [.55, '#b0714a'], [1, '#6e3f25']]);
+  const chest = mid(mS, mH, .12);
+  const core = cap(chest, mH, 15, 12);
+  const ctr = mid(mS, mH), out = (P, k) => [P[0] + (P[0] - ctr[0]) * k, P[1] + (P[1] - ctr[1]) * k * .3];
+  const lSo = out(Q.lS, .22), rSo = out(Q.rS, .22), lWa = mid(Q.lS, Q.lH, .66), rWa = mid(Q.rS, Q.rH, .66);
+  const pinch = (P, k) => [P[0] + (ctr[0] - P[0]) * k, P[1]];
+  const lWi = pinch(lWa, .12), rWi = pinch(rWa, .12), lHo = out(Q.lH, .08), rHo = out(Q.rH, .08);
+  const poly = `M${F(lSo[0])} ${F(lSo[1])}Q${F(mS[0])} ${F(mS[1] - 5)} ${F(rSo[0])} ${F(rSo[1])}Q${F(rSo[0])} ${F(rWi[1] - 10)} ${F(rWi[0])} ${F(rWi[1])}L${F(rHo[0])} ${F(rHo[1])}L${F(lHo[0])} ${F(lHo[1])}L${F(lWi[0])} ${F(lWi[1])}Q${F(lSo[0])} ${F(lWi[1] - 10)} ${F(lSo[0])} ${F(lSo[1])}Z`;
+  let torso = `<path d="${core.d}" fill="${tGrad}"/><path d="${poly}" fill="${tGrad}"/>`;
+  if (c > .45) { // Pectorales y abdomen cuando se ve de frente
+    const pl = mid(Q.lS, Q.rS, .1), prr = mid(Q.lS, Q.rS, .9), dn = (P, d) => [P[0], P[1] + d];
+    const a = dn(pl, 13), b = dn(prr, 13), m0 = dn(mS, 22), nav = mid(mS, mH, .82);
+    torso += `<path d="M${F(a[0])} ${F(a[1])}Q${F(m0[0] - 6 * c)} ${F(m0[1] + 3)} ${F(m0[0])} ${F(m0[1] - 2)}Q${F(m0[0] + 6 * c)} ${F(m0[1] + 3)} ${F(b[0])} ${F(b[1])}" fill="none" stroke="#4a2614" stroke-opacity=".45" stroke-width="1.8" stroke-linecap="round"/>`;
+    torso += `<path d="M${F(m0[0])} ${F(m0[1])}L${F(nav[0])} ${F(nav[1])}" stroke="#4a2614" stroke-opacity=".3" stroke-width="1.4"/>`;
+    [.5, .62, .74].forEach(t => { const q = mid(mS, mH, t), w = 6.5 * c; torso += `<path d="M${F(q[0] - w)} ${F(q[1])}Q${F(q[0])} ${F(q[1] + 1.5)} ${F(q[0] + w)} ${F(q[1])}" fill="none" stroke="#4a2614" stroke-opacity=".28" stroke-width="1.3"/>`; });
+  }
+  put(tz, torso);
+
+  /* ---- Piernas, short y botas ---- */
+  const stance = p.rA[2] < p.lA[2] - 30;
+  const leg = (side, pal) => {
+    const H = Q[side + 'H'], K = Q[side + 'K'], A = Q[side + 'A'];
+    seg(H, K, 10, 7, pal, null, true);
+    seg(K, A, 6.8, 4.6, pal, null, true);
+    const fv = x.foot || (side === 'l' ? (stance ? [-2, 2, 13] : [0, 2, 12]) : (stance ? [8, 2, 9] : [0, 2, 12]));
+    const A3 = p[side + 'A'], T = pr([A3[0] + fv[0], A3[1] + fv[1], A3[2] + fv[2]]), shank = mid(A, K, .2);
+    const bk = cap(A, T, 6.4, 5.2), sk = cap(shank, A, 6.6, 6.2), bz = (A[2] + T[2]) / 2 + .1;
+    put(bz, `<path d="${sk.d}" fill="#17171b"/><path d="${bk.d}" fill="#1f1f24"/><path d="M${F(shank[0])} ${F(shank[1])}L${F(A[0])} ${F(A[1])}" stroke="#e6ff00" stroke-width="1.4" stroke-dasharray="2 2"/>`);
+    const sh = mid(H, K, .42), sk2 = cap(H, sh, 11.5, 10);
+    put((H[2] + K[2]) / 2 + .2, `<path d="${sk2.d}" fill="${shade(H, sh, sk2, 11.5, ['#ff4d5a', '#c81e2b', '#5c0a12'])}"/><path d="M${F(sh[0] + sk2.nx * 10)} ${F(sh[1] + sk2.ny * 10)}L${F(sh[0] - sk2.nx * 10)} ${F(sh[1] - sk2.ny * 10)}" stroke="#e6ff00" stroke-width="1.6"/>`);
+  };
+  leg('l', PL); leg('r', PR);
+  const pel = cap(Q.lH, Q.rH, 13.5, 13.5), wb1 = [Q.lH[0], Q.lH[1] - 8], wb2 = [Q.rH[0], Q.rH[1] - 8], wb = cap(wb1, wb2, 3.4, 3.4);
+  put(tz + .3, `<path d="${pel.d}" fill="${lin([mH[0], mH[1] - 10], [mH[0], mH[1] + 12], [[0, '#ff4d5a'], [.5, '#c81e2b'], [1, '#6b0c15']])}"/><path d="${wb.d}" fill="#0a0a0b"/><path d="M${F(wb1[0])} ${F(wb1[1])}L${F(wb2[0])} ${F(wb2[1])}" stroke="#e6ff00" stroke-width="1.2"/>`);
+
+  /* ---- Brazos, hombros y guantes ---- */
+  const arm = (side, pal, gCol) => {
+    const S0 = Q[side + 'S'], E = Q[side + 'E'], W = Q[side + 'W'];
+    put(S0[2] + .2, `<circle cx="${F(S0[0])}" cy="${F(S0[1])}" r="8.2" fill="${rad([[0, pal[0]], [.6, pal[1]], [1, pal[2]]])}"/>`);
+    seg(S0, E, 7.2, 5.6, pal, null, true);
+    const fk = seg(E, W, 5.8, 4.8, pal, null, false);
+    const dx = (W[0] - E[0]) / fk.L, dy = (W[1] - E[1]) / fk.L;
+    if (x.hands) { put(W[2] + 3, `<circle cx="${F(W[0])}" cy="${F(W[1])}" r="5.6" fill="${rad([[0, pal[0]], [1, pal[1]]])}"/>`); return; }
+    const sc = Math.min(1.35, Math.max(.75, 1 + W[2] * .005)), G = [W[0] + dx * 3 * sc, W[1] + dy * 3 * sc];
+    const c1 = [W[0] - dx * 9 * sc, W[1] - dy * 9 * sc], cuff = cap(c1, W, 6.2 * sc, 6.6 * sc), band = [W[0] - dx * 4.5 * sc, W[1] - dy * 4.5 * sc];
+    const ang = Math.atan2(dy, dx) * 180 / Math.PI, th0 = [G[0] - dy * 7 * sc - dx * 2, G[1] + dx * 7 * sc - dy * 2];
+    put(W[2] + 3, `<path d="${cuff.d}" fill="${gCol[2]}"/><path d="M${F(band[0] - dy * 6.6 * sc)} ${F(band[1] + dx * 6.6 * sc)}L${F(band[0] + dy * 6.6 * sc)} ${F(band[1] - dx * 6.6 * sc)}" stroke="#f4f4f5" stroke-width="${F(2.6 * sc)}"/>
+      <ellipse cx="${F(G[0])}" cy="${F(G[1])}" rx="${F(12 * sc)}" ry="${F(9.8 * sc)}" transform="rotate(${F(ang)} ${F(G[0])} ${F(G[1])})" fill="${rad([[0, gCol[0]], [.55, gCol[1]], [1, gCol[2]]])}" stroke="#2a0306" stroke-width=".8"/>
+      <ellipse cx="${F(th0[0])}" cy="${F(th0[1])}" rx="${F(4.4 * sc)}" ry="${F(3.2 * sc)}" transform="rotate(${F(ang)} ${F(th0[0])} ${F(th0[1])})" fill="${gCol[1]}" stroke="#2a0306" stroke-width=".6"/>
+      <ellipse cx="${F(G[0] - 3 * sc)}" cy="${F(G[1] - 3.5 * sc)}" rx="${F(4 * sc)}" ry="${F(2.4 * sc)}" transform="rotate(${F(ang)} ${F(G[0] - 3 * sc)} ${F(G[1] - 3.5 * sc)})" fill="#fff" fill-opacity=".35"/>`);
+  };
+  arm('l', PL, ['#ff7a84', '#e01e2d', '#7a0710']);
+  arm('r', PR, ['#f25562', '#b81322', '#5e050c']);
+
+  /* ---- Cuello y cabeza ---- */
+  const H0 = Q.head, nk = cap([mS[0], mS[1] - 2], [H0[0], H0[1] + 8], 6.6, 5.8);
+  put(tz + .1, `<path d="${nk.d}" fill="${lin([mS[0] - 6, mS[1]], [mS[0] + 6, mS[1]], [[0, '#c4835b'], [1, '#7a4529']])}"/>`);
+  const f0 = s, hx = H0[0], hy = H0[1];
+  let head = `<ellipse cx="${F(hx)}" cy="${F(hy)}" rx="10.8" ry="12.6" fill="${rad([[0, '#f0bd96'], [.6, '#c0825a'], [1, '#7a4529']], .4, .35)}"/>`;
+  head += `<ellipse cx="${F(hx - f0 * 2.5)}" cy="${F(hy - 6.5)}" rx="11.3" ry="7.4" fill="#1c1714"/>`;
+  if (Math.abs(f0) > .4) head += `<ellipse cx="${F(hx - f0 * 1.5)}" cy="${F(hy + 2)}" rx="2.3" ry="3.3" fill="#9a5c3a"/>`;
+  if (c > .3) {
+    [-1, 1].forEach(d => { const ex = hx + d * 4.2 * c + f0 * 3.2; head += `<circle cx="${F(ex)}" cy="${F(hy + 1.5)}" r="1.45" fill="#140c08"/><path d="M${F(ex - 2.2)} ${F(hy - 1.6)}L${F(ex + 2.2)} ${F(hy - 1.9)}" stroke="#1c1714" stroke-width="1.3" stroke-linecap="round"/>`; });
+    head += `<path d="M${F(hx - 3 * c + f0 * 3)} ${F(hy + 7.5)}Q${F(hx + f0 * 3)} ${F(hy + 8.6)} ${F(hx + 3 * c + f0 * 3)} ${F(hy + 7.5)}" fill="none" stroke="#5c2f1a" stroke-width="1.2" stroke-linecap="round"/>`;
+  }
+  if (Math.abs(f0) > .3) head += `<path d="M${F(hx + f0 * 9.6)} ${F(hy - .5)}L${F(hx + f0 * 12.4)} ${F(hy + 3.5)}L${F(hx + f0 * 9.6)} ${F(hy + 4.6)}Z" fill="#c0825a"/>`;
+  head += `<ellipse cx="${F(hx)}" cy="${F(hy + 10)}" rx="7" ry="2.6" fill="#000" fill-opacity=".14"/>`;
+  put(H0[2] + .6, head);
+
+  /* ---- Estela de golpes y cuerda ---- */
+  if (x.tr) ['l', 'r'].forEach(k => {
+    const a = x.tr[k], W = Q[k + 'W']; a.push([W[0], W[1]]); if (a.length > 7) a.shift();
+    if (a.length > 2) put(W[2] + 2.9, `<polyline points="${a.map(q => F(q[0]) + ',' + F(q[1])).join(' ')}" fill="none" stroke="#e6ff00" stroke-opacity=".4" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>`);
+  });
+  if (x.rope != null) {
+    const cs = Math.cos(2 * Math.PI * x.rope), cyr = 109 - 202 * cs, A = Q.lW, B = Q.rW;
+    put(cs < 0 ? 200 : -200, `<path d="M${F(A[0])} ${F(A[1])} Q${F((A[0] + B[0]) / 2)} ${F(cyr)} ${F(B[0])} ${F(B[1])}" fill="none" stroke="#e6ff00" stroke-width="2.5"/>`);
+  }
+  const sx = (Q.lA[0] + Q.rA[0]) / 2;
+  let bg = '';
+  if (x.bg) {
+    const g = id + 'bg';
+    defs.push(`<radialGradient id="${g}" cx=".5" cy=".05" r=".95"><stop offset="0" stop-color="#4b4c57"/><stop offset=".55" stop-color="#17181d"/><stop offset="1" stop-color="#0a0a0b"/></radialGradient>`);
+    bg = `<rect width="220" height="240" fill="url(#${g})"/>
+      <g opacity=".55"><path d="M0 118 L220 112" stroke="#ff2d3d" stroke-width="2.6"/><path d="M0 140 L220 135" stroke="#f4f4f5" stroke-width="2.2"/><path d="M0 162 L220 158" stroke="#2563eb" stroke-width="2.4"/>
+      <rect x="203" y="96" width="9" height="114" rx="2" fill="#26272d"/><rect x="203" y="96" width="9" height="8" rx="2" fill="#ff2d3d"/></g>
+      <path d="M0 207 L220 207 L220 240 L0 240Z" fill="#121318"/><path d="M0 207 L220 207" stroke="#2f3038" stroke-width="2"/>
+      <ellipse cx="110" cy="230" rx="120" ry="16" fill="#e6ff00" fill-opacity=".04"/>`;
+  }
+  return `<defs>${defs.join('')}</defs>${bg}<ellipse cx="${F(sx)}" cy="209" rx="46" ry="6" fill="#000" fill-opacity=".45"/>` + it.sort((a, b) => a[0] - b[0]).map(q => q[1]).join('');
+}
+
+function createPlayer(host, o = {}) {
+  const P = { move: null, el: 0, speed: o.speed ?? .7, view: o.view || 'tres', playing: true, last: 0, raf: 0, loop: -1, tr: { l: [], r: [] }, cue: '' };
+  host.classList.add('relative');
+  host.innerHTML = `<svg viewBox="0 0 220 240" class="h-full w-full" aria-hidden="true"></svg>${o.compact ? '' : '<p class="pcue pointer-events-none absolute inset-x-2 bottom-2 rounded-lg bg-black/75 px-2 py-1 text-center text-sm font-bold text-neon"></p>'}`;
+  const svg = host.querySelector('svg'), cueEl = host.querySelector('.pcue');
+  const total = () => P.move.fr.reduce((a, q) => a + q.ms, 0);
+  function render() {
+    const fr = P.move.fr, tot = total(), n = fr.length;
+    const lp = Math.floor(P.el / tot); if (lp !== P.loop) { P.loop = lp; o.onLoop?.(P.move, lp); }
+    let t = P.el % tot, i = 0; while (i < n - 1 && t > fr[i].ms) { t -= fr[i].ms; i++; }
+    const k = Math.min(1, t / fr[i].ms), e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+    const a = fr[(i - 1 + n) % n].p, b = fr[i].p, pose = {};
+    J.forEach(j => pose[j] = [0, 1, 2].map(q => a[j][q] + (b[j][q] - a[j][q]) * e));
+    let cue = ''; for (let q = 0; q < n && !cue; q++) cue = fr[(i - q + n) % n].cue || '';
+    if (cue !== P.cue) { P.cue = cue; if (cueEl) cueEl.textContent = cue; o.onCue?.(cue); }
+    svg.innerHTML = drawPose(pose, P.view, { tr: P.tr, rope: P.move.rope ? (P.el % tot) / tot : null, foot: P.move.foot, hands: P.move.cat === 'Ejercicios', bg: o.bg });
+  }
+  function frame(now) {
+    P.raf = requestAnimationFrame(frame);
+    if (!P.move || (P.last && now - P.last < 33)) return;
+    const dt = P.last ? Math.min(now - P.last, 100) : 0; P.last = now;
+    if (document.hidden || host.offsetParent === null) return;
+    if (P.playing) P.el += dt * P.speed;
+    render();
+  }
+  const api = {
+    setMove(id) { const m = mv(id) || MOVES[0]; if (P.move === m) return; P.move = m; P.el = 0; P.loop = -1; P.cue = ''; P.tr = { l: [], r: [] }; },
+    setSpeed(v) { P.speed = v; },
+    setView(v) { P.view = v; P.tr = { l: [], r: [] }; },
+    toggle() { P.playing = !P.playing; return P.playing; },
+    get playing() { return P.playing; },
+    get move() { return P.move; }
+  };
+  if (o.move) api.setMove(o.move);
+  P.raf = requestAnimationFrame(frame);
+  return api;
+}
+
+/* ---- Biblioteca de técnica ---- */
+const PLAY_SM = '<svg class="w-6 h-6 ml-0.5" viewBox="0 0 24 24" fill="currentColor"><path d="M6 3l15 9-15 9z"/></svg>';
+const PAUSE_SM = '<svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="4" width="5" height="16" rx="1"/><rect x="14" y="4" width="5" height="16" rx="1"/></svg>';
+const lib = { cat: 'Golpes', voice: S.get('libVoice', true), speed: S.get('libSpeed', .7), view: S.get('libView', 'tres') };
+const libPlayer = createPlayer($('#libStage'), {
+  move: 'jab', bg: true, view: lib.view, speed: lib.speed,
+  onLoop: (m, n) => { $('#libReps').textContent = n; if (n > 0 && lib.voice && !document.hidden && $('#tab-tecnica').offsetParent) say(m.call); }
+});
+const timerPlayer = createPlayer($('#rcFig'), { view: 'tres', speed: .8, bg: true });
+const ghostPlayer = createPlayer($('#ghost'), { compact: true, view: 'mirror', speed: .7, onCue: c => { $('#ghostCue').textContent = c; } });
+const keyPose = m => { let best = m.fr[0].p, sc = -1; m.fr.forEach(q => { let d = 0; J.forEach(j => { for (let i = 0; i < 3; i++) d += Math.abs(q.p[j][i] - BASE[j][i]); }); if (d > sc) { sc = d; best = q.p; } }); return best; };
+const chip = on => on ? 'bg-neon text-ink' : 'bg-steel text-zinc-300';
+function renderLib() {
+  const m = libPlayer.move;
+  $('#libCat').textContent = m.cat.toUpperCase();
+  $('#libName').textContent = m.name;
+  $('#libNum').textContent = m.n; $('#libNum').classList.toggle('hidden', !m.n);
+  $('#libDesc').textContent = m.desc;
+  $('#libGhost').textContent = EXS[m.id] ? 'Analizar y calificar con Entrenador IA' : 'Imitar con Entrenador IA (cámara)';
+  $('#libTips').innerHTML = m.steps ? stepsHtml(m) : m.tips.map(t => `<li class="flex gap-2"><span class="font-bold text-neon">✓</span><span>${t}</span></li>`).join('');
+  $('#libCats').innerHTML = CATS.map(c => `<button data-c="${c}" class="shrink-0 rounded-full px-3 py-1.5 text-sm font-semibold ${chip(c === lib.cat)}">${c}</button>`).join('');
+  $('#libList').innerHTML = MOVES.filter(q => q.cat === lib.cat).map(q => `
+    <button data-m="${q.id}" class="rounded-xl border p-2 text-left ${q.id === m.id ? 'border-neon bg-neon/10' : 'border-line bg-steel'}">
+      <svg viewBox="0 0 220 240" class="h-24 w-full" aria-hidden="true">${drawPose(keyPose(q), q.view || 'tres', { foot: q.foot, hands: q.cat === 'Ejercicios', bg: true })}</svg>
+      <p class="text-sm font-bold leading-tight">${q.n ? `<span class="text-blood">${q.n}</span> · ` : ''}${q.name}</p>
+    </button>`).join('');
+  $('#libSpeed').innerHTML = [[.4, 'Lento'], [.7, 'Medio'], [1, 'Real']].map(([v, l]) => `<button data-v="${v}" class="rounded-lg py-2 text-xs font-bold ${chip(v === lib.speed)}">${l} ${v}×</button>`).join('');
+  $('#libView').innerHTML = [['mirror', 'Espejo'], ['tres', '3/4'], ['side', 'Lateral']].map(([v, l]) => `<button data-w="${v}" class="rounded-lg py-2 text-xs font-bold ${chip(v === lib.view)}">${l}</button>`).join('');
+  $('#libVoice').textContent = 'Voz del entrenador: ' + (lib.voice ? 'sí' : 'no');
+  $('#libPlay').innerHTML = libPlayer.playing ? PAUSE_SM : PLAY_SM;
+}
+function selectMove(id) {
+  ac(); libPlayer.setMove(id); autoView(id); $('#libReps').textContent = '0';
+  if (lib.voice) say(mv(id).call);
+  renderLib();
+}
+function openLib(id) {
+  const m = mv(id); if (!m) return;
+  lib.cat = m.cat; lib.speed = .4; libPlayer.setSpeed(.4); libPlayer.setMove(id); autoView(id); $('#libReps').textContent = '0';
+  renderLib(); show('tecnica');
+}
+$('#libCats').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { lib.cat = b.dataset.c; renderLib(); } });
+$('#libList').addEventListener('click', e => { const b = e.target.closest('button'); if (b) selectMove(b.dataset.m); });
+$('#libSpeed').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; lib.speed = +b.dataset.v; S.set('libSpeed', lib.speed); libPlayer.setSpeed(lib.speed); renderLib(); });
+$('#libView').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; lib.view = b.dataset.w; S.set('libView', lib.view); libPlayer.setView(lib.view); renderLib(); });
+$('#libVoice').onclick = () => { lib.voice = !lib.voice; S.set('libVoice', lib.voice); if (lib.voice) say(libPlayer.move.call); renderLib(); };
+$('#libPlay').onclick = () => { libPlayer.toggle(); renderLib(); };
+$('#libGhost').onclick = () => {
+  const id = libPlayer.move.id;
+  if (EXS[id]) { iaCfg.mode = id; resetEx(); } else { iaCfg.mode = 'guard'; iaCfg.ghost = id; }
+  syncIaUi(); renderIaHistory(); show('ia');
+  toast(EXS[id] ? 'Enciende la cámara: la IA contará y calificará cada repetición' : 'Enciende la cámara y replica el movimiento');
+};
+$('#ghostSel').innerHTML = '<option value="">Ninguno</option>' + CATS.filter(c => c !== 'Ejercicios').map(c => `<optgroup label="${c}">${MOVES.filter(m => m.cat === c).map(m => `<option value="${m.id}">${m.n ? m.n + ' · ' : ''}${m.name}</option>`).join('')}</optgroup>`).join('');
+$('#ghostSel').onchange = e => { iaCfg.ghost = e.target.value; syncIaUi(); };
+$('#rcOpen').onclick = e => openLib(e.currentTarget.dataset.m);
+
+/* ==================== EJERCICIOS: animaciones paso a paso ==================== */
+const bp = o => { const p = { head: [0, o.head[0], o.head[1]] }; ['S', 'E', 'W', 'H', 'K', 'A'].forEach(k => { const [xw, y, z] = o[k]; p['l' + k] = [-xw, y, z]; p['r' + k] = [xw, y, z]; }); return p; };
+Object.assign(PO, {
+  PU_T: bp({ head: [121, 58], S: [14, 130, 40], E: [17, 159, 40], W: [17, 188, 42], H: [11, 156, -10], K: [9, 173, -42], A: [8, 186, -70] }),
+  PU_B: bp({ head: [166, 64], S: [14, 172, 44], E: [24, 166, 20], W: [17, 188, 42], H: [11, 180, -10], K: [9, 184, -42], A: [8, 187, -70] }),
+  AB_D: bp({ head: [176, -66], S: [18, 180, -50], E: [24, 174, -36], W: [10, 168, -30], H: [12, 182, 0], K: [10, 148, 30], A: [9, 188, 50] }),
+  AB_U: bp({ head: [124, -34], S: [18, 137, -26], E: [24, 150, -26], W: [10, 146, -14], H: [12, 182, 0], K: [10, 148, 30], A: [9, 188, 50] }),
+  SQ_T: bp({ head: [18, 2], S: [20, 46, 0], E: [20, 48, 28], W: [18, 48, 56], H: [12, 104, 0], K: [14, 147, 4], A: [14, 190, 0] }),
+  SQ_B: bp({ head: [72, 6], S: [20, 100, -6], E: [20, 100, 22], W: [18, 98, 50], H: [13, 150, -30], K: [16, 150, 16], A: [14, 190, 0] }),
+  PL1: bp({ head: [145, 46], S: [14, 150, 30], E: [14, 188, 30], W: [12, 188, 52], H: [11, 167, -20], K: [9, 178, -50], A: [8, 187, -80] }),
+  PL2: bp({ head: [146, 46], S: [14, 151, 30], E: [14, 188, 30], W: [12, 188, 52], H: [11, 169, -20], K: [9, 179, -50], A: [8, 187, -80] }),
+  TJ_C: bp({ head: [18, 0], S: [20, 46, 0], E: [24, 74, 0], W: [24, 100, 2], H: [12, 104, 0], K: [9, 147, 2], A: [8, 190, 0] }),
+  TJ_O: bp({ head: [12, 0], S: [20, 40, 0], E: [30, 16, 0], W: [16, -6, 0], H: [12, 98, 0], K: [22, 142, 2], A: [30, 184, 0] })
+});
+MOVES.push(
+  { id: 'lagartijas', n: '', cat: 'Ejercicios', name: 'Lagartijas', call: 'Lagartija', view: 'side', foot: [0, 5, 5], tips: [],
+    desc: 'Fortalecen pecho, hombros y tríceps: la base para golpes rectos con potencia y para sostener la guardia.',
+    steps: ['Manos un poco más abiertas que los hombros, dedos al frente.', 'Cuerpo recto de cabeza a talones: aprieta abdomen y glúteos.', 'Baja en 2 segundos con los codos a unos 45° del cuerpo.', 'Pecho a 2–3 cm del piso.', 'Empuja el piso hasta estirar los brazos sin trabar los codos.'],
+    errors: ['Cadera caída o en pico', 'Codos abiertos en forma de T', 'Bajar solo la cabeza o medio rango'],
+    easy: 'Si no completas la meta, apoya las rodillas manteniendo la línea recta de rodillas a cabeza.',
+    fr: [f('PU_T', 500, 'Cuerpo recto de cabeza a talones'), f('PU_T', 400), f('PU_B', 1000, 'Baja en 2 s, codos a 45°'), f('PU_B', 200, 'Pecho casi al piso'), f('PU_T', 700, 'Empuja el piso sin arquear la cadera')] },
+  { id: 'abdominales', n: '', cat: 'Ejercicios', name: 'Abdominales', call: 'Abdominal', view: 'side', tips: [],
+    desc: 'Un abdomen fuerte absorbe golpes al cuerpo y transmite el giro de la cadera a tus puños.',
+    steps: ['Acostado boca arriba, rodillas dobladas a 90°, pies apoyados en el piso.', 'Brazos cruzados sobre el pecho (o manos tras las orejas sin jalar el cuello).', 'Exhala y sube despegando la espalda del piso poco a poco.', 'Sube hasta unos 60°, aprieta el abdomen 1 segundo.', 'Baja controlado en 2 segundos, sin dejarte caer.'],
+    errors: ['Jalar el cuello con las manos', 'Impulsarte con los brazos', 'Dejarte caer de golpe'],
+    easy: 'Si te cuesta subir, haz crunch: despega solo los hombros del piso.',
+    fr: [f('AB_D', 500, 'Rodillas a 90°, brazos cruzados'), f('AB_D', 300), f('AB_U', 900, 'Exhala y sube despegando la espalda'), f('AB_U', 250, 'Arriba: aprieta el abdomen'), f('AB_D', 1100, 'Baja controlado en 2 s')] },
+  { id: 'sentadillas', n: '', cat: 'Ejercicios', name: 'Sentadillas', call: 'Sentadilla', view: 'side', tips: [],
+    desc: 'Piernas fuertes = golpes más potentes y movimiento de pies que aguanta los 3 rounds.',
+    steps: ['Pies al ancho de hombros, puntas ligeramente hacia afuera.', 'Brazos al frente para equilibrarte.', 'Lleva la cadera atrás como si te sentaras en una silla.', 'Baja hasta que los muslos queden paralelos al piso.', 'Sube empujando con los talones, rodillas en línea con las puntas.'],
+    errors: ['Talones despegados del piso', 'Rodillas hacia adentro', 'Inclinar demasiado el pecho'],
+    easy: 'Si pierdes el equilibrio, baja hasta sentarte en una silla y levántate.',
+    fr: [f('SQ_T', 500, 'Pies al ancho de hombros'), f('SQ_T', 300), f('SQ_B', 1100, 'Cadera atrás, como sentarte'), f('SQ_B', 250, 'Muslos paralelos al piso'), f('SQ_T', 800, 'Sube empujando con los talones')] },
+  { id: 'plancha', n: '', cat: 'Ejercicios', name: 'Plancha', call: 'Plancha', view: 'side', foot: [0, 5, 5], tips: [],
+    desc: 'Core estable para recibir golpes y mantener la postura cuando estás cansado.',
+    steps: ['Antebrazos en el piso, codos justo debajo de los hombros.', 'Piernas estiradas apoyando las puntas de los pies.', 'Cuerpo en línea recta: ni cadera arriba ni abajo.', 'Aprieta abdomen y glúteos y respira normal.'],
+    errors: ['Cadera caída', 'Cadera en pico', 'Contener la respiración'],
+    easy: 'Apoya las rodillas manteniendo la línea de rodillas a cabeza.',
+    fr: [f('PL1', 600, 'Codos bajo los hombros'), f('PL2', 1400, 'Cuerpo en línea recta'), f('PL1', 1400, 'Aprieta abdomen y glúteos'), f('PL2', 1400, 'Respira normal')] },
+  { id: 'tijeras', n: '', cat: 'Ejercicios', name: 'Saltos de tijera', call: 'Tijera', view: 'mirror', tips: [],
+    desc: 'Resistencia y coordinación de brazos y piernas: perfecto para calentar antes de los rounds.',
+    steps: ['De pie, pies juntos y brazos a los lados.', 'Salta abriendo las piernas más allá de los hombros.', 'Al mismo tiempo sube los brazos estirados sobre la cabeza.', 'Salta de regreso a la posición inicial.', 'Aterriza suave sobre la punta de los pies.'],
+    errors: ['Brazos a medio camino', 'Aterrizar con los talones', 'Piernas poco abiertas'],
+    easy: 'Sin saltar: abre una pierna a la vez mientras subes los brazos.',
+    fr: [f('TJ_C', 260, 'Pies juntos, brazos abajo'), f('TJ_O', 260, 'Abre piernas y sube brazos'), f('TJ_O', 80), f('TJ_C', 260, 'Regresa juntando los pies'), f('TJ_C', 150)] }
+);
+function stepsHtml(m) {
+  return `<p class="text-xs font-bold tracking-widest text-neon">PASO A PASO</p>${m.steps.map((t, i) => `<li class="flex gap-2"><span class="w-4 shrink-0 font-display text-lg leading-tight text-neon">${i + 1}</span><span>${t}</span></li>`).join('')}<p class="pt-2 text-xs font-bold tracking-widest text-blood">ERRORES COMUNES</p>${m.errors.map(t => `<li class="flex gap-2"><span class="font-bold text-blood">✕</span><span>${t}</span></li>`).join('')}${m.easy ? `<p class="pt-2 text-xs text-zinc-400"><b class="text-zinc-200">Versión fácil:</b> ${m.easy}</p>` : ''}`;
+}
+function autoView(id) { const m = mv(id); if (m?.view && lib.view !== m.view) { lib.view = m.view; libPlayer.setView(m.view); } }
+
+/* ==================== COACH IA: análisis de ejercicios ==================== */
+const SIDE_IDX = { L: { S: 11, E: 13, W: 15, H: 23, K: 25, A: 27 }, R: { S: 12, E: 14, W: 16, H: 24, K: 26, A: 28 } };
+const angDeg = (a, b, c) => { const v1x = a.x - b.x, v1y = a.y - b.y, v2x = c.x - b.x, v2y = c.y - b.y, d = Math.hypot(v1x, v1y) * Math.hypot(v2x, v2y) || 1; return Math.acos(Math.max(-1, Math.min(1, (v1x * v2x + v1y * v2y) / d))) * 180 / Math.PI; };
+const hipSag = L => { const dx = L.A.x - L.S.x; if (Math.abs(dx) < 1) return 0; return L.H.y - (L.S.y + (L.A.y - L.S.y) * (L.H.x - L.S.x) / dx); };
+const bodyLine = L => angDeg(L.S, L.H, L.A) >= 162 ? [true] : [false, 0, hipSag(L) > 0 ? 'Cadera caída: aprieta abdomen y glúteos' : 'Cadera muy alta: bájala a la línea del cuerpo'];
+const EXS = {
+  lagartijas: { name: 'Lagartijas', unit: 'reps', target: 10, view: 'side', need: ['S', 'E', 'W', 'H', 'A'], place: 'Pon el iPhone en el piso a unos 2 m, de lado a ti: que se vea de la cabeza a los pies.',
+    v: L => angDeg(L.S, L.E, L.W), up: 150, start: 130, full: 95, deep: 'Baja más: pecho cerca del piso', form: bodyLine },
+  abdominales: { name: 'Abdominales', unit: 'reps', target: 15, view: 'side', need: ['S', 'H', 'K', 'A'], place: 'Acuéstate de lado a la cámara, a unos 2 m y a la altura del piso, con las rodillas dobladas.',
+    v: L => angDeg(L.S, L.H, L.K), up: 112, start: 102, full: 80, deep: 'Sube más: despega toda la espalda',
+    form: L => { const k = angDeg(L.H, L.K, L.A); return k >= 45 && k <= 125 ? [true] : [false, 0, 'Dobla las rodillas cerca de 90°']; } },
+  sentadillas: { name: 'Sentadillas', unit: 'reps', target: 15, view: 'side', need: ['S', 'H', 'K', 'A'], place: 'Ponte de lado a la cámara a 2–3 m, con todo el cuerpo visible.',
+    v: L => angDeg(L.H, L.K, L.A), up: 160, start: 140, full: 100, deep: 'Baja más: muslos paralelos al piso',
+    form: L => Math.abs(Math.atan2(L.S.x - L.H.x, L.H.y - L.S.y)) * 180 / Math.PI <= 50 ? [true] : [false, 0, 'Pecho arriba: no te inclines tanto'] },
+  plancha: { name: 'Plancha', unit: 's', target: 30, view: 'side', hold: true, need: ['S', 'E', 'H', 'A'], place: 'Pon el iPhone en el piso a unos 2 m, de lado a ti.', form: bodyLine },
+  tijeras: { name: 'Saltos de tijera', unit: 'reps', target: 20, view: 'mirror', jacks: true, place: 'De frente a la cámara a 2–3 m, con todo el cuerpo visible.' }
+};
+const MODES = [['guard', 'Guardia'], ...Object.entries(EXS).map(([k, v]) => [k, v.name])];
+const exMode = () => (iaCfg.mode && EXS[iaCfg.mode]) ? iaCfg.mode : null;
+const exTarget = () => (iaCfg.targets || {})[iaCfg.mode] ?? EXS[iaCfg.mode].target;
+let EX;
+function resetEx() { EX = { phase: 'wait', min: 999, t0: 0, frames: 0, good: 0, reps: 0, scores: [], partial: 0, last: null, holdGood: 0, holdTotal: 0, done: false, start: Date.now(), maxLeg: 0, armsUp: false, lastMsgAt: 0, formMsg: '', msgUntil: 0 }; }
+resetEx();
+const gradeOf = p => p >= 90 ? ['Excelente', 'text-go'] : p >= 80 ? ['Muy bien', 'text-go'] : p >= 70 ? ['Bien', 'text-neon'] : p >= 60 ? ['Regular', 'text-orange-400'] : ['Por mejorar', 'text-blood'];
+function exMsg(t, kind, sticky) {
+  const n = performance.now(); if (!sticky && n < EX.msgUntil) return; if (sticky) EX.msgUntil = n + 1400;
+  const cls = kind === 'bad' ? 'bg-blood text-white' : kind === 'good' ? 'bg-go text-ink' : 'bg-black/70 text-zinc-200';
+  const html = `<div class="rounded-xl px-3 py-2 text-center text-sm font-extrabold shadow-lg ${cls}">${t}</div>`;
+  if (html !== lastAlertHtml) { $('#alertBox').innerHTML = html; lastAlertHtml = html; }
+  const w = $('#camWrap'); w.classList.remove('alarm'); w.style.borderColor = kind === 'bad' ? '#ff2d3d' : kind === 'good' ? '#22c55e' : '';
+}
+const FULL = [[11, 12], [11, 13], [13, 15], [12, 14], [14, 16], [11, 23], [12, 24], [23, 24], [23, 25], [25, 27], [24, 26], [26, 28], [27, 31], [28, 32]];
+function drawSkel(vis, pt, ok) {
+  const col = ok ? 'rgba(34,197,94,.95)' : '#ff2d3d';
+  ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.strokeStyle = col;
+  FULL.forEach(([a, b]) => { if (vis(a) < .35 || vis(b) < .35) return; const A = pt(a), B = pt(b); ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(B.x, B.y); ctx.stroke(); });
+  [0, 11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28].forEach(i => { if (vis(i) < .35) return; const p = pt(i); ctx.fillStyle = '#e6ff00'; ctx.beginPath(); ctx.arc(p.x, p.y, 7, 0, 7); ctx.fill(); });
+}
+function analyzeEx(lm, dt, now) {
+  const W = canvas.width, H = canvas.height, cfg = EXS[iaCfg.mode];
+  ctx.clearRect(0, 0, W, H);
+  if (!lm) { exMsg('Sin cuerpo detectado. ' + cfg.place, 'info'); return; }
+  const vis = i => lm[i].visibility ?? 1, pt = i => ({ x: lm[i].x * W, y: lm[i].y * H });
+  if (cfg.jacks) return analyzeJacks(lm, vis, pt, now);
+  const score = s => Object.values(SIDE_IDX[s]).reduce((a, i) => a + vis(i), 0);
+  const idx = SIDE_IDX[score('L') >= score('R') ? 'L' : 'R'];
+  if (cfg.need.some(k => vis(idx[k]) < .35)) { drawSkel(vis, pt, true); exMsg('Necesito ver todo tu cuerpo. ' + cfg.place, 'info'); return; }
+  const L = {}; Object.entries(idx).forEach(([k, i]) => L[k] = pt(i));
+  const [ok, , msg] = cfg.form(L);
+  if (cfg.hold) {
+    EX.holdTotal += dt; if (ok) EX.holdGood += dt;
+    if (!EX.done && EX.holdGood >= exTarget()) { EX.done = true; bell(2); if (iaCfg.voice) say(line('hold')); }
+    exMsg(ok ? `Línea perfecta · ${Math.floor(EX.holdGood)} s` : msg, ok ? 'good' : 'bad');
+    if (!ok && now - EX.lastMsgAt > 2500) { EX.lastMsgAt = now; if (iaCfg.sound) beep(520, .15, .25); if (iaCfg.voice) say(msg.split(':')[0]); }
+    drawSkel(vis, pt, ok); return;
+  }
+  const v = cfg.v(L);
+  if (EX.phase === 'wait') { if (v > cfg.up) EX.phase = 'up'; exMsg('Ponte en posición inicial', 'info'); }
+  else if (EX.phase === 'up') { if (v < cfg.start) { Object.assign(EX, { phase: 'down', min: v, t0: now, frames: 0, good: 0, formMsg: '' }); } else exMsg(EX.reps ? `${EX.reps} repeticiones · sigue` : '¡Empieza!', 'info'); }
+  else {
+    EX.min = Math.min(EX.min, v); EX.frames++; if (ok) EX.good++; else EX.formMsg = msg;
+    if (!ok) exMsg(msg, 'bad');
+    if (v > cfg.up) finishRep(cfg, now);
+  }
+  drawSkel(vis, pt, ok);
+}
+function repDone(score, fb, kind) {
+  EX.reps++; EX.scores.push(score); EX.last = score;
+  exMsg(`${fb} · ${score}`, kind, true);
+  if (iaCfg.sound) beep(kind === 'good' ? 1200 : 600, .12, .25);
+  const t = exTarget();
+  if (EX.reps >= t && !EX.done) { EX.done = true; bell(2); if (iaCfg.voice) say(line('target')); }
+  else if (iaCfg.voice) say(kind === 'good' && EX.reps % 5 === 0 ? `${EX.reps}. ${line('good')}` : String(EX.reps));
+}
+function finishRep(cfg, now) {
+  EX.phase = 'up';
+  const depth = Math.max(0, Math.min(1, (cfg.up - EX.min) / (cfg.up - cfg.full))), form = EX.frames ? EX.good / EX.frames : 1;
+  const dur = (now - EX.t0) / 1000, tempo = dur < .7 ? .5 : dur > 7 ? .7 : 1;
+  const score = Math.round(100 * (.5 * depth + .35 * form + .15 * tempo));
+  if (depth < .85) EX.partial++;
+  if (depth < .85) repDone(score, cfg.deep, 'bad');
+  else if (form < .7) repDone(score, EX.formMsg || 'Cuida la técnica', 'bad');
+  else if (tempo < 1) repDone(score, 'Más controlado, sin rebotar', 'bad');
+  else repDone(score, '¡Buena repetición!', 'good');
+}
+function analyzeJacks(lm, vis, pt, now) {
+  if ([0, 11, 12, 15, 16, 27, 28].some(i => vis(i) < .35)) { drawSkel(vis, pt, true); exMsg('Necesito verte completo de frente', 'info'); return; }
+  const sw = Math.abs(lm[11].x - lm[12].x) || .01, leg = Math.abs(lm[27].x - lm[28].x) / sw;
+  const up = lm[15].y < lm[0].y && lm[16].y < lm[0].y, down = lm[15].y > lm[11].y && lm[16].y > lm[12].y;
+  const closed = down && leg < 1.15;
+  if (EX.phase === 'wait') { if (closed) EX.phase = 'closed'; exMsg('Pies juntos y brazos abajo para empezar', 'info'); }
+  else if (EX.phase === 'closed') { if (leg > 1.25 || up) Object.assign(EX, { phase: 'open', t0: now, maxLeg: leg, armsUp: up }); }
+  else {
+    EX.maxLeg = Math.max(EX.maxLeg, leg); EX.armsUp = EX.armsUp || up;
+    if (closed) {
+      EX.phase = 'closed';
+      const legs = Math.min(1, EX.maxLeg / 1.8), arms = EX.armsUp ? 1 : .4, dur = (now - EX.t0) / 1000, tempo = dur < .35 ? .6 : dur > 3 ? .7 : 1;
+      const score = Math.round(100 * (.45 * arms + .4 * legs + .15 * tempo));
+      if (score < 75) EX.partial++;
+      if (!EX.armsUp) repDone(score, 'Sube los brazos completos', 'bad');
+      else if (legs < .8) repDone(score, 'Abre más las piernas', 'bad');
+      else repDone(score, '¡Bien!', 'good');
+    }
+  }
+  drawSkel(vis, pt, true);
+}
+function exSummary() {
+  const cfg = EXS[iaCfg.mode], t = exTarget();
+  const prec = cfg.hold ? (EX.holdTotal > 0 ? Math.round(EX.holdGood / EX.holdTotal * 100) : 0) : (EX.scores.length ? Math.round(avg(EX.scores)) : 0);
+  const amount = cfg.hold ? Math.floor(EX.holdGood) : EX.reps;
+  return { cfg, t, prec, amount, comp: Math.min(1, amount / t) };
+}
+function updateExStats() {
+  const s = exSummary(), has = s.cfg.hold ? EX.holdTotal > 1 : EX.scores.length > 0;
+  $('#stGuard').textContent = s.amount + (s.cfg.hold ? ' s' : '');
+  $('#stAlerts').textContent = has ? s.prec + '%' : '–';
+  $('#stTime').textContent = Math.round(s.comp * 100) + '%';
+  setFs(s.cfg.hold ? `${s.amount}/${s.t}s` : `${s.amount}/${s.t}`, s.cfg.hold ? 'SEGUNDOS EN LÍNEA' : s.cfg.name.toUpperCase(), has ? s.prec + '%' : '–', 'PRECISIÓN', Math.round(s.comp * 100) + '%', 'CUMPLIMIENTO');
+  $('#hudL').className = 'rounded-lg bg-black/70 px-2 py-1 text-neon'; $('#hudR').className = 'rounded-lg bg-black/70 px-2 py-1 text-zinc-200';
+  $('#hudL').textContent = s.cfg.hold ? `En línea ${Math.floor(EX.holdGood)}/${s.t} s` : `Repeticiones ${EX.reps}/${s.t}`;
+  $('#hudR').textContent = s.cfg.hold ? `Total ${Math.floor(EX.holdTotal)} s` : `Última: ${EX.last ?? '–'}`;
+  const a = avg(cam.fpsAcc) || 0; $('#hudFps').textContent = (a ? Math.round(1 / a) : 0) + ' cuadros/s';
+}
+function saveEx(auto) {
+  if (!exMode()) return;
+  const s = exSummary();
+  if (s.cfg.hold ? EX.holdTotal < 5 : EX.reps < 1) { if (!auto) toast(s.cfg.hold ? 'Sostén la plancha al menos 5 s' : 'Haz al menos 1 repetición'); return; }
+  const list = S.get('ex', []);
+  list.unshift({ id: uid(), date: todayISO(), ex: iaCfg.mode, name: s.cfg.name, amount: s.amount, target: s.t, unit: s.cfg.unit, prec: s.prec, comp: Math.round(s.comp * 100) / 100, partial: EX.partial, dur: Math.round((Date.now() - EX.start) / 1000) });
+  S.set('ex', list.slice(0, 300)); resetEx(); renderIaHistory(); updateExStats();
+  toast(`${s.cfg.name}: ${s.amount}/${s.t} ${s.cfg.unit === 's' ? 's' : 'repeticiones'} · precisión ${s.prec}%${s.comp < 1 ? ' · incompleto' : ' · ¡completo!'}`);
+}
+const autoSaveEx = () => { if (exMode() && EX) saveEx(true); };
+function renderExHistory() {
+  const m = exMode(), list = S.get('ex', []).filter(x => x.ex === m);
+  if (!list.length) { $('#iaHistory').innerHTML = `<p class="text-xs text-zinc-500">Aún no hay series de ${EXS[m].name.toLowerCase()}. Al apagar la cámara la serie se guarda sola, aunque quede incompleta.</p>`; return; }
+  const best = Math.max(...list.map(x => x.prec));
+  $('#iaHistory').innerHTML = `<p class="text-xs text-zinc-400">Mejor precisión: <b class="text-neon">${best}%</b></p>` + list.slice(0, 8).map(x => { const [g, gc] = gradeOf(x.prec); return `
+    <div class="rounded-xl bg-steel px-3 py-2 text-sm">
+      <div class="flex items-center justify-between"><span><b>${fdate(x.date)}</b> <span class="text-zinc-400">· ${x.amount}/${x.target} ${x.unit === 's' ? 's' : 'repeticiones'}</span></span>
+      <span class="flex items-center gap-2"><span class="text-xs font-bold ${gc}">${g}</span><span class="font-display text-xl ${gc}">${x.prec}%</span><button data-del="${x.id}" class="exdel text-zinc-500" aria-label="Borrar">✕</button></span></div>
+      <div class="mt-1 h-1.5 overflow-hidden rounded-full bg-ink"><div class="h-full ${x.comp >= 1 ? 'bg-go' : 'bg-orange-400'}" style="width:${Math.round(x.comp * 100)}%"></div></div>
+      <p class="mt-0.5 text-[11px] text-zinc-500">Cumplimiento ${Math.round(x.comp * 100)}%${x.partial ? ` · ${x.partial} repeticiones incompletas` : ''}</p></div>`; }).join('');
+}
+$('#iaHistory').addEventListener('click', e => { const b = e.target.closest('.exdel'); if (!b) return; S.set('ex', S.get('ex', []).filter(x => x.id !== b.dataset.del)); renderExHistory(); });
+function syncModeUi() {
+  const m = exMode(), cfg = m && EXS[m];
+  $('#iaModes').innerHTML = MODES.map(([k, l]) => `<button data-mode="${k}" class="shrink-0 rounded-full px-3 py-1.5 text-sm font-semibold ${k === (m || 'guard') ? 'bg-neon text-ink' : 'bg-steel text-zinc-300'}">${l}</button>`).join('');
+  $('#iaPlace').textContent = cfg ? cfg.place : 'Colócate a 2–3 m, de frente, con hombros y cara visibles.';
+  $('#iaTitle').textContent = cfg ? cfg.name : 'Revisión de guardia';
+  ['stL1', 'stL2', 'stL3'].forEach((id, i) => $('#' + id).textContent = (cfg ? [cfg.hold ? 'SEGUNDOS EN LÍNEA' : 'REPETICIONES', 'PRECISIÓN', 'CUMPLIMIENTO'] : ['GUARDIA ARRIBA', 'ALERTAS', 'TIEMPO'])[i]);
+  $('#exTargetRow').classList.toggle('hidden', !cfg); $('#exTargetRow').classList.toggle('flex', !!cfg);
+  if (cfg) $('#exTarget').textContent = exTarget() + (cfg.unit === 's' ? ' s' : ' rep.');
+  ['#ghostRow', '#elbowRow', '#guardLine'].forEach(s => $(s).classList.toggle('hidden', !!cfg));
+  $('#saveIa').textContent = cfg ? 'Guardar serie y calificar' : 'Guardar sesión de IA';
+  const g = cfg ? m : iaCfg.ghost, wide = !!cfg && cfg.view === 'side';
+  $('#ghostSel').value = iaCfg.ghost || '';
+  $('#ghostWrap').classList.toggle('hidden', !g); $('#ghostWrap').classList.toggle('w-44', wide); $('#ghostWrap').classList.toggle('w-28', !wide);
+  if (g) { ghostPlayer.setMove(g); ghostPlayer.setView(cfg ? cfg.view : 'mirror'); }
+  $('#fsModes').innerHTML = $('#iaModes').innerHTML.replace(/px-3 py-1.5 text-sm/g, 'px-3 py-1 text-xs').replace(/bg-steel text-zinc-300/g, 'bg-white/15 text-white');
+  $('#fsCalib').classList.toggle('hidden', !!cfg); $('#camWrap').classList.toggle('wideghost', wide);
+  if (cam.running && cfg) updateExStats();
+}
+$('#iaModes').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  autoSaveEx(); iaCfg.mode = b.dataset.mode; resetEx(); lastAlertHtml = ''; $('#alertBox').innerHTML = '';
+  syncIaUi(); renderIaHistory(); if (iaCfg.voice && cam.running) say(b.textContent);
+});
+const stepTarget = d => { const cfg = EXS[iaCfg.mode], st = cfg.unit === 's' ? 10 : 1; iaCfg.targets = iaCfg.targets || {}; iaCfg.targets[iaCfg.mode] = Math.max(st, Math.min(cfg.unit === 's' ? 600 : 300, exTarget() + d * st)); EX.done = false; syncIaUi(); };
+$('#exMinus').onclick = () => stepTarget(-1);
+$('#exPlus').onclick = () => stepTarget(1);
+
+/* ==================== 2. TIMER ==================== */
+const R = {
+  coord: { name: 'Coordinación y Desplazamiento', desc: 'Lunes y Jueves · base técnica con Jab y 1-2', rounds: [
+    { t: 'Fase 1 · Calentamiento: cuerda', a: 'rope', cue: 'Ritmo ligero, respira por la nariz', s: ['Salta sobre la punta de los pies, saltos bajos de 2–3 cm.', 'Las muñecas giran la cuerda; codos pegados al cuerpo.', 'Sin cuerda: simula el movimiento, el trabajo de pies es el mismo.', 'Últimos 30 s: alterna pies como si corrieras en tu lugar.'] },
+    { t: 'Fase 1 · Calentamiento: movilidad y sombra suave', a: 'stretch', cue: 'Suelta hombros y cadera', s: ['30 s círculos de hombros hacia atrás y cuello lento.', '30 s rotación de cadera y tobillos.', '1 min sombra muy suave: solo guardia y pasos.', '1 min jabs al 50% para despertar el brazo.'] },
+    { t: 'Round 3 · Postura y caminata', a: 'walk', cue: 'Pasos cortos, nunca cruces los pies', s: ['Diestro: pie izquierdo adelante, pies al ancho de hombros, el trasero a 45°.', 'Peso 50/50, rodillas flexionadas, talón trasero ligeramente levantado.', 'Para avanzar empuja con el pie trasero y mueve primero el delantero; para retroceder, al revés.', 'Nunca cruces ni juntes los pies: deslízate.', 'Puños en los pómulos, codos sobre las costillas, mentón al pecho.'] },
+    { t: 'Round 4 · Lanzar el Jab', a: 'jab', cue: 'Sale recto, regresa más rápido', s: ['Sale recto desde la guardia, sin echar la mano atrás para “cargar”.', 'Gira el puño al final: nudillos arriba, palma hacia el suelo.', 'El hombro sube y cubre tu mentón mientras golpeas.', 'Regresa la mano por el mismo camino, más rápido de lo que salió.', 'La derecha no se mueve: pegada a tu cara.', 'Alterna: jab en el lugar → jab avanzando → jab retrocediendo.'] },
+    { t: 'Round 5 · Combinación 1-2', a: 'onetwo', cue: 'Pivota el pie trasero y sal de la línea', s: ['1 = jab, 2 = recto de derecha.', 'En el 2 pivota el pie trasero como si apagaras una colilla y gira la cadera.', 'El poder sube del suelo: pie → cadera → hombro → puño.', 'Mientras sale el 2, la izquierda vuelve a cubrir tu cara.', 'Después de cada 1-2 sal con un paso lateral: nunca te quedes enfrente.'] },
+    { t: 'Round 6 · Defensa: bloqueo y esquiva', a: 'slip', cue: 'Mueve la cabeza, no cierres los ojos', s: ['Bloqueo: recibe en guantes y antebrazos con los codos cerrados.', 'Esquiva: saca la cabeza de la línea doblando la rodilla, no la cintura.', 'Esquiva hacia afuera del jab y regresa a guardia.', 'Secuencia: esquiva – esquiva – 1-2.', 'Mirada al pecho y hombros del rival imaginario.'] }
+  ]},
+  power: { name: 'Potencia y Resistencia', desc: 'Martes y Viernes · ráfagas e intervalos de velocidad', rounds: [
+    { t: 'Fase 1 · Calentamiento: cuerda intensa', a: 'rope', cue: 'Sube el ritmo cada minuto', s: ['Min 1 ritmo suave, min 2 ritmo medio, min 3 ritmo alto.', 'Mantente sobre la punta de los pies.', 'Sin cuerda: rodillas al pecho alternadas 20 s cada minuto.'] },
+    { t: 'Fase 1 · Sombra activa', a: 'onetwo', cue: 'Combina golpes con pasos', s: ['1-2 avanzando, 1-2 saliendo en ángulo.', 'Aumenta la velocidad gradualmente.', 'Exhala con cada golpe.'] },
+    { t: 'Round 3 · Ráfagas de rectos (20/10)', a: 'burst', burst: [20, 10], cue: 'Velocidad sin perder la guardia', s: ['En “¡RÁFAGA!”: rectos 1-2 continuos, cortos y rápidos al 80%.', 'En “GUARDIA ALTA”: puños en pómulos, codos cerrados, rebota y respira.', 'Exhala fuerte con cada golpe (“tss”).', 'Cansado = momento de mantener las manos arriba.'] },
+    { t: 'Round 4 · Ráfagas con desplazamiento (15/15)', a: 'burst', burst: [15, 15], cue: 'Golpea avanzando, protege saliendo', s: ['Ráfaga: 1-2-1-2 avanzando.', 'Guardia: 15 s de rolls de cintura con los puños arriba.', 'Con costal: golpes cortos cerca; sin costal: sombra frente al espejo o la cámara del Entrenador IA.'] },
+    { t: 'Round 5 · Ganchos y uppercuts (20/10)', a: 'hook', burst: [20, 10], cue: 'La cadera gira, el codo se queda arriba', s: ['Gancho de izquierda: codo a la altura del puño, gira cadera y pie delantero.', 'Uppercut: dobla la rodilla del mismo lado y sube con las piernas.', 'Combina 1-2-3 (jab, recto, gancho).', 'Los codos vuelven a cubrir costillas después de cada golpe.'] },
+    { t: 'Round 6 · Round de campeonato (10/20)', a: 'burst', burst: [10, 20], cue: 'Cada ráfaga al 100%', s: ['Ritmo medio constante todo el round.', 'Cada ráfaga de 10 s es a máxima velocidad.', 'Imagina que son los últimos 20 s de tu primera pelea.'] },
+    { t: 'Round 7 · Core y guardia', a: 'stance', cue: 'Aquí se gana el último round', s: ['45 s plancha.', '45 s abdominal bicicleta.', '45 s guardia alta con rebotes ligeros.', '45 s sentadilla isométrica con guardia arriba.'] }
+  ]},
+  rest: { name: 'Recuperación activa', desc: 'Miércoles, Sábado y Domingo · el músculo crece descansando', rounds: [
+    { t: 'Round 1 · Movilidad articular', a: 'stretch', cue: 'Movimiento lento, sin dolor', s: ['Círculos de muñecas, codos y hombros (ambos sentidos).', 'Rotación de cadera, rodillas y tobillos.', 'Gato-vaca para la espalda.'] },
+    { t: 'Round 2 · Sombra técnica en cámara lenta', a: 'jab', cue: 'Perfecciona, no aceleres', s: ['Cada golpe a cámara lenta revisando la forma.', 'Ideal hacerlo con el Entrenador IA encendido.', 'Busca 0 alertas de guardia.'] },
+    { t: 'Round 3 · Estiramiento y respiración', a: 'stretch', cue: 'Inhala 4 s, exhala 6 s', s: ['Pecho en marco de puerta 30 s por lado.', 'Hombro cruzado 30 s por lado.', 'Isquiotibiales y cadera 30 s por lado.', 'Termina con 1 min de respiración lenta.'] }
+  ]}
+};
+const DAYS = [{ d: 1, l: 'L', r: 'coord' }, { d: 2, l: 'M', r: 'power' }, { d: 3, l: 'Mi', r: 'rest' }, { d: 4, l: 'J', r: 'coord' }, { d: 5, l: 'V', r: 'power' }, { d: 6, l: 'S', r: 'rest' }, { d: 0, l: 'D', r: 'rest' }];
+const PREP = 10;
+const tc = Object.assign({ work: 180, rest: 60, voice: true }, S.get('tCfg', {}));
+const T = { day: new Date().getDay(), idx: 0, phase: 'idle', remaining: tc.work, endAt: 0, running: false, int: 0, lastSec: -1, burstOn: null };
+const routine = () => R[DAYS.find(x => x.d === T.day).r];
+const PLAY_ICON = '<svg class="w-9 h-9 ml-1" viewBox="0 0 24 24" fill="currentColor"><path d="M6 3l15 9-15 9z"/></svg>';
+const PAUSE_ICON = '<svg class="w-9 h-9" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="4" width="5" height="16" rx="1"/><rect x="14" y="4" width="5" height="16" rx="1"/></svg>';
+
+function renderDaySel() {
+  $('#daySel').innerHTML = DAYS.map(x => `<button data-d="${x.d}" class="rounded-lg py-2 text-sm font-bold ${x.d === T.day ? 'bg-neon text-ink' : 'bg-steel text-zinc-300'}">${x.l}</button>`).join('');
+  const r = routine(); $('#routineName').textContent = r.name; $('#routineDesc').textContent = r.desc;
+}
+$('#daySel').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; T.day = +b.dataset.d; timerReset(); });
+function renderRound() {
+  const r = routine(), rest = T.phase === 'rest', i = rest ? Math.min(T.idx + 1, r.rounds.length - 1) : T.idx, rd = r.rounds[i];
+  $('#rcTop').innerHTML = `<p class="text-xs font-bold tracking-widest ${rest ? 'text-blood' : 'text-neon'}">${rest ? 'DESCANSO · SIGUIENTE ROUND' : 'ROUND ACTUAL · REPLICA LA FIGURA'}</p>
+    <p class="font-display text-2xl leading-tight">${rd.t}</p>`;
+  const mid = AMAP[rd.a] || 'guardia';
+  timerPlayer.setMove(mid); focusPlayer.setMove(mid); focusRound(rd, rest);
+  $('#rcOpen').dataset.m = mid;
+  $('#rcBody').innerHTML = `
+    <p class="mb-2 rounded-lg bg-neon/10 px-3 py-2 text-center text-sm font-bold text-neon">${rd.cue}</p>
+    <ol class="space-y-1.5 text-sm text-zinc-300">${rd.s.map((x, k) => `<li class="flex gap-2"><span class="font-bold text-neon">${k + 1}.</span><span>${x}</span></li>`).join('')}</ol>
+    ${rest ? '<p class="mt-3 rounded-lg bg-steel px-3 py-2 text-xs text-zinc-300">En el descanso: respira por la nariz, hombros sueltos, agua a sorbos y repasa mentalmente el siguiente round.</p>' : ''}`;
+  $('#roundList').innerHTML = r.rounds.map((x, k) => `
+    <button data-i="${k}" class="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm ${k === T.idx ? 'bg-neon/15 text-neon font-bold' : k < T.idx ? 'text-zinc-500 line-through' : 'text-zinc-300'}">
+      <span>${x.t}</span>${x.burst ? `<span class="text-[10px] text-blood">${x.burst[0]}/${x.burst[1]}</span>` : ''}</button>`).join('');
+}
+$('#roundList').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; jump(+b.dataset.i); });
+
+function setBg() {
+  const c = { prep: '#4d4700', work: '#0c5a26', rest: '#7a0f17' }[T.phase];
+  document.body.style.backgroundColor = c || '';
+  $('#focus').style.backgroundColor = c || '#0a0a0b';
+  $('#timerPanel').style.backgroundColor = c ? 'rgba(0,0,0,.25)' : '';
+  $('#ring').setAttribute('stroke', T.phase === 'rest' ? '#ff8a94' : T.phase === 'work' ? '#86efac' : '#e6ff00');
+}
+function renderTimer() {
+  const r = routine(), total = { prep: PREP, work: tc.work, rest: tc.rest }[T.phase] || tc.work;
+  const secs = Math.max(0, Math.ceil(T.remaining));
+  $('#tTime').textContent = mmss(secs);
+  $('#tRound').textContent = `ROUND ${Math.min(T.idx + 1, r.rounds.length)}/${r.rounds.length}`;
+  $('#tConf').textContent = `${mmss(tc.work)} / ${mmss(tc.rest)}`;
+  $('#tPhase').textContent = { idle: 'LISTO', prep: 'PREPÁRATE', work: '¡A TRABAJAR!', rest: 'DESCANSO', done: '¡TERMINADO!' }[T.phase];
+  $('#ring').setAttribute('stroke-dashoffset', T.phase === 'idle' ? 0 : 565.49 * (1 - Math.max(0, T.remaining) / total));
+  $('#tPlay').innerHTML = T.running ? PAUSE_ICON : PLAY_ICON;
+  const rd = r.rounds[T.idx];
+  if (T.phase === 'work' && rd?.burst) {
+    const [on, off] = rd.burst, el = tc.work - T.remaining, inB = (el % (on + off)) < on;
+    $('#tBurst').innerHTML = inB ? '<span class="blink text-neon">¡RÁFAGA!</span>' : '<span class="text-white">GUARDIA ALTA</span>';
+    if (T.burstOn !== null && inB !== T.burstOn) { beep(inB ? 1400 : 700, .12, .25); flash(inB ? 'rgba(230,255,0,.35)' : 'rgba(255,255,255,.2)'); }
+    T.burstOn = inB;
+  } else { $('#tBurst').innerHTML = T.phase === 'done' ? '<span class="text-neon">Registra tu sesión</span>' : ''; T.burstOn = null; }
+  $('#tSound').textContent = 'Voz: ' + (tc.voice ? 'sí' : 'no');
+  renderFocus();
+}
+function tick() {
+  T.remaining = (T.endAt - Date.now()) / 1000;
+  const secs = Math.ceil(T.remaining);
+  if (secs !== T.lastSec) {
+    T.lastSec = secs;
+    if (T.phase === 'work' && secs === 10) { clapper(); flash('rgba(255,255,255,.4)'); if (tc.voice) say(line('ten')); }
+    if ((T.phase === 'rest' || T.phase === 'prep') && secs <= 3 && secs > 0) beep(900, .12, .2);
+  }
+  if (T.remaining <= 0) advance();
+  renderTimer();
+}
+function enter(phase) {
+  T.phase = phase; T.remaining = { prep: PREP, work: tc.work, rest: tc.rest }[phase] || 0;
+  T.endAt = Date.now() + T.remaining * 1000; T.lastSec = -1; T.burstOn = null;
+  setBg(); renderRound(); renderTimer();
+}
+function advance() {
+  const r = routine();
+  if (T.phase === 'prep') { enter('work'); bell(3); flash('rgba(34,197,94,.5)'); if (tc.voice) setTimeout(() => say(roundSay(r.rounds[T.idx], T.idx)), 1400); }
+  else if (T.phase === 'work') {
+    if (T.idx >= r.rounds.length - 1) { finish(); return; }
+    enter('rest'); bell(1); flash('rgba(255,45,61,.5)'); if (tc.voice) setTimeout(() => say(line('rest')), 1200);
+  } else if (T.phase === 'rest') { T.idx++; enter('work'); bell(3); flash('rgba(34,197,94,.5)'); if (tc.voice) setTimeout(() => say(roundSay(r.rounds[T.idx], T.idx)), 1400); }
+}
+function finish() {
+  logWorkout(true);
+  clearInterval(T.int); T.running = false; T.phase = 'done'; T.remaining = 0; keepAwake(false);
+  bell(4); document.body.style.backgroundColor = ''; $('#timerPanel').style.backgroundColor = '';
+  if (tc.voice) setTimeout(() => say(line('done')), 1800);
+  renderTimer(); renderRound();
+  $('#dType').value = { coord: 'Coordinación', power: 'Potencia', rest: 'Recuperación' }[DAYS.find(x => x.d === T.day).r];
+  setTimeout(() => { if (confirm('¡Rutina completa! ¿Registrar cómo te sentiste en el Diario?')) show('diario'); }, 2500);
+}
+function play() {
+  ac();
+  if (T.running) { clearInterval(T.int); T.running = false; T.remaining = (T.endAt - Date.now()) / 1000; keepAwake(false); renderTimer(); return; }
+  if (T.phase === 'idle' || T.phase === 'done') { if (T.phase === 'done') T.idx = 0; T.mini = false; enter('prep'); if (tc.voice) say(line('prep')); }
+  else T.endAt = Date.now() + T.remaining * 1000;
+  T.running = true; keepAwake(true); clearInterval(T.int); T.int = setInterval(tick, 200); renderTimer();
+}
+function timerReset() {
+  if (['prep', 'work', 'rest'].includes(T.phase)) logWorkout(false);
+  clearInterval(T.int); T.running = false; T.phase = 'idle'; T.idx = 0; T.remaining = tc.work; keepAwake(false);
+  document.body.style.backgroundColor = ''; $('#timerPanel').style.backgroundColor = '';
+  renderDaySel(); renderRound(); renderTimer(); setBg();
+}
+function jump(i) {
+  const n = routine().rounds.length; T.idx = Math.max(0, Math.min(n - 1, i));
+  if (T.phase === 'idle' || T.phase === 'done') { T.phase = 'idle'; renderRound(); renderTimer(); return; }
+  enter('work');
+}
+$('#tPlay').onclick = play;
+$('#tReset').onclick = timerReset;
+$('#tNext').onclick = () => jump(T.idx + 1);
+$('#tPrev').onclick = () => jump(T.idx - 1);
+$('#tSound').onclick = () => { tc.voice = !tc.voice; S.set('tCfg', tc); renderTimer(); };
+$('#cfgWork').onchange = e => { tc.work = +e.target.value; S.set('tCfg', tc); if (T.phase === 'idle') T.remaining = tc.work; renderTimer(); };
+$('#cfgRest').onchange = e => { tc.rest = +e.target.value; S.set('tCfg', tc); renderTimer(); };
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && (T.running || cam.running)) { wakeLock = null; keepAwake(true); } });
+
+/* ==================== PANTALLA COMPLETA: cámara IA y modo rutina ==================== */
+const lockScroll = () => { document.documentElement.style.overflow = ($('#camWrap').classList.contains('camfull') || !$('#focus').classList.contains('hidden')) ? 'hidden' : ''; };
+function setFs(big, bigL, s1, s1L, s2, s2L) {
+  $('#fsBig').textContent = big; $('#fsBigL').textContent = bigL;
+  $('#fsS1').textContent = s1; $('#fsS1L').textContent = s1L;
+  $('#fsS2').textContent = s2; $('#fsS2L').textContent = s2L;
+}
+$('#fsExit').onclick = () => stopCam();
+$('#fsSave').onclick = () => $('#saveIa').click();
+$('#fsCalib').onclick = () => startCalib();
+$('#calibBtn').onclick = () => { if (!cam.running) { toast('Enciende la cámara: la calibración se hace en pantalla completa'); return; } startCalib(); };
+$('#fsModes').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; $('#iaModes').querySelector(`[data-mode="${b.dataset.mode}"]`)?.click(); });
+
+/* ---- Modo rutina (cronómetro a pantalla completa) ---- */
+const focusPlayer = createPlayer($('#fFig'), { compact: true, view: 'tres', speed: .8, bg: true, onCue: c => { $('#fCue').textContent = c; } });
+function renderFocus() {
+  const on = ['prep', 'work', 'rest'].includes(T.phase) && !T.mini;
+  $('#focus').classList.toggle('hidden', !on); $('#focus').classList.toggle('flex', on); lockScroll();
+  if (!on) return;
+  $('#fTime').textContent = $('#tTime').textContent; $('#fPhase').textContent = $('#tPhase').textContent;
+  $('#fRound').textContent = $('#tRound').textContent; $('#fBurst').innerHTML = $('#tBurst').innerHTML;
+  $('#fPlay').innerHTML = T.running ? PAUSE_ICON : PLAY_ICON;
+  const total = { prep: PREP, work: tc.work, rest: tc.rest }[T.phase];
+  $('#fBar').style.width = Math.min(100, 100 * (1 - Math.max(0, T.remaining) / total)) + '%';
+}
+function focusRound(rd, rest) {
+  const r = routine(), nx = r.rounds[T.idx + 1];
+  $('#fTitle').textContent = (rest ? 'Sigue: ' : '') + rd.t.replace(/^(?:Round \d+|Fase \d+) · /, '');
+  $('#fSteps').innerHTML = `<p class="mb-2 font-display text-2xl leading-tight">${rd.t}</p><p class="mb-3 rounded-lg bg-neon/10 px-3 py-2 text-sm font-bold text-neon">${rd.cue}</p><ol class="space-y-2">${rd.s.map((x, k) => `<li class="flex gap-2"><b class="text-neon">${k + 1}.</b><span>${x}</span></li>`).join('')}</ol><p class="mt-4 text-center text-xs text-zinc-400">Toca para cerrar</p>`;
+  $('#fNext').textContent = rest ? 'Descanso: respira por la nariz, hombros sueltos y agua a sorbos' : (nx ? 'Siguiente: ' + nx.t : 'Último round: ¡con todo!');
+}
+$('#fMin').onclick = () => { T.mini = true; renderFocus(); };
+$('#fPlay').onclick = () => play();
+$('#fPrev').onclick = () => jump(T.idx - 1);
+$('#fNext2').onclick = () => jump(T.idx + 1);
+$('#fStop').onclick = () => { if (confirm('¿Terminar la rutina ahora? Se registrará con los rounds que llevas.')) timerReset(); };
+$('#fStepsBtn').onclick = () => $('#fSteps').classList.remove('hidden');
+$('#fSteps').onclick = () => $('#fSteps').classList.add('hidden');
+$('#tFull').onclick = () => { if (T.phase === 'idle' || T.phase === 'done') play(); else { T.mini = false; renderFocus(); } };
+
+/* ==================== 3. PLAN / HITOS ==================== */
+const MS = [
+  { id: 'nov26', date: new Date(2026, 10, 1), when: 'Noviembre 2026', tag: 'FASE 0 · CASA', title: 'Aclimatación en casa y ahorro total', age: '27 años',
+    why: 'Llegar al gimnasio sabiendo moverte y con el dinero completo: así nada te saca del camino en los primeros meses.',
+    goals: ['Completar la meta de ahorro de $3,600 MXN', 'Aprender el lenguaje corporal: guardia, postura y paso sin cruzar pies', 'Entrenar 4 días por semana con el Cronómetro (Lun/Mar/Jue/Vie)', 'Llegar a 90% de guardia arriba en el Entrenador IA', '3 rounds de cuerda seguidos sin parar', 'Comprar guantes 14oz, vendas 4.5 m y cuerda', 'Aprender a vendarte (practícalo 10 veces)', 'Visitar 2–3 gimnasios de Pachuca y pedir clase muestra'] },
+  { id: 'dic26', date: new Date(2026, 11, 1), when: 'Diciembre 2026', tag: 'FASE 1 · GIMNASIO', title: 'Inscripción al gimnasio en Pachuca', age: '27 años',
+    why: 'Pasar de la teoría a la corrección de un entrenador. Los primeros 90 días definen si el hábito se queda.',
+    goals: ['Pagar inscripción y mes 1', 'Decirle al entrenador que empiezas de cero y que tu meta es competir en amateur', 'Asistir mínimo 4 veces por semana', 'Registrar cada sesión en el Diario', 'Pedir corrección de guardia y jab en las primeras semanas', 'No tocar la reserva de meses 2 y 3', 'Pesarte cada lunes para conocer tu peso real'] },
+  { id: 'may27', date: new Date(2027, 4, 1), when: 'Mayo 2027', tag: 'FASE 2 · BASE', title: 'Cumpleaños 28 con 6 meses de base técnica', age: '28 años',
+    why: 'A los 28 con 6 meses reales eres un principiante sólido: ya no aprendes a golpear, aprendes a boxear.',
+    goals: ['≈100 sesiones de gimnasio completadas', 'Dominar 1-2, 1-2-3 y jab al cuerpo', 'Aguantar 6 rounds de costal a ritmo', 'Defensa en manoplas: bloqueo, esquiva lateral y rodada', 'Primeros sparrings técnicos ligeros con permiso del entrenador', 'Definir tu categoría de peso tentativa', 'Mantener guardia arriba sin que te lo recuerden'] },
+  { id: 'nov27', date: new Date(2027, 10, 1), when: 'Noviembre 2027', tag: 'FASE 3 · COMPETENCIA', title: 'Primeras peleas amateurs en Hidalgo', age: '28 años',
+    why: 'Con un año de boxeo real y aval del entrenador, el ring es el siguiente paso lógico.',
+    goals: ['Examen médico de aptitud deportiva', 'Afiliarte a la asociación de boxeo de Hidalgo y tramitar tu Record Book', 'Llegar a tu categoría sin deshidratarte (baja peso con semanas de anticipación)', 'Campamento de 8 semanas guiado por tu entrenador', 'Primera pelea amateur (3 rounds)', 'Anotar resultado y lecciones de cada pelea'] }
+];
+const BRIDGES = [
+  ['Ene–Feb 2027', 'Fundamentos en gimnasio: guardia, jab, 1-2 y defensa básica con corrección diaria.'],
+  ['Mar–Abr 2027', 'Combinaciones de 3–4 golpes, costal por rounds y primeras manoplas con el entrenador.'],
+  ['Jun–Jul 2027', 'Sparring técnico ligero supervisado; resistencia para 6+ rounds.'],
+  ['Ago–Sep 2027', 'Sparring regular, peso de competencia definido e inicio de trámites.'],
+  ['Oct 2027', 'Campamento previo: ajuste de peso gradual, revisión médica y pelea de preparación interna.']
+];
+let openMs = null;
+function renderPlan() {
+  const goals = S.get('goals', {});
+  const now = new Date();
+  const next = MS.find(m => m.date > now) || MS[MS.length - 1];
+  const dn = daysUntil(next.date);
+  $('#hdrCountdown').textContent = dn > 0 ? `${dn} días · ${next.when.split(' ')[0].slice(0, 3)}` : '¡En marcha!';
+  $('#nextMilestone').innerHTML = `
+    <p class="text-xs font-bold tracking-widest text-neon">PRÓXIMO HITO</p>
+    <div class="flex items-end justify-between gap-3">
+      <div><p class="font-display text-3xl leading-tight">${next.title}</p><p class="text-sm text-zinc-400">${next.when} · ${next.age}</p></div>
+      <div class="text-right"><p class="font-display text-6xl leading-none text-neon">${Math.max(dn, 0)}</p><p class="text-xs text-zinc-400">días</p></div>
+    </div>`;
+  if (openMs === null) openMs = next.id;
+  $('#milestones').innerHTML = `<div class="absolute bottom-4 left-[22px] top-4 w-0.5 bg-line"></div>` + MS.map(m => {
+    const done = goals[m.id] || [], n = done.filter(Boolean).length, pct = Math.round(n / m.goals.length * 100);
+    const past = m.date < now && m.id !== next.id, cur = m.id === next.id, open = openMs === m.id;
+    return `<div class="relative pl-12">
+      <div class="absolute left-2.5 top-4 flex h-6 w-6 items-center justify-center rounded-full border-2 ${pct === 100 ? 'border-go bg-go' : cur ? 'border-neon bg-neon' : past ? 'border-zinc-500 bg-steel' : 'border-line bg-coal'}">
+        ${pct === 100 ? '<svg class="h-3.5 w-3.5 text-ink" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4"><path d="M20 6 9 17l-5-5"/></svg>' : ''}</div>
+      <div class="card overflow-hidden ${cur ? 'border-neon/60' : ''}">
+        <button data-ms="${m.id}" class="msbtn w-full p-4 text-left">
+          <div class="flex items-center justify-between"><span class="text-[10px] font-bold tracking-widest ${cur ? 'text-neon' : 'text-zinc-400'}">${m.tag}</span><span class="text-xs font-bold text-zinc-400">${pct}%</span></div>
+          <p class="font-display text-2xl leading-tight">${m.when}</p>
+          <p class="text-sm text-zinc-300">${m.title}</p>
+          <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-steel"><div class="h-full bg-neon" style="width:${pct}%"></div></div>
+        </button>
+        ${open ? `<div class="border-t border-line p-4 pt-3">
+          <p class="mb-3 text-xs italic text-zinc-400">${m.why}</p>
+          <div class="space-y-1.5">${m.goals.map((g, k) => `
+            <label class="flex items-start gap-3 rounded-lg bg-steel px-3 py-2 text-sm ${done[k] ? 'text-zinc-500 line-through' : ''}">
+              <input type="checkbox" data-g="${m.id}" data-k="${k}" ${done[k] ? 'checked' : ''} class="goalcb mt-0.5 h-5 w-5 shrink-0 accent-[#e6ff00]">${g}</label>`).join('')}</div>
+        </div>` : ''}
+      </div></div>`;
+  }).join('');
+  $('#bridges').innerHTML = BRIDGES.map(([w, t]) => `<div class="rounded-lg bg-steel px-3 py-2"><b class="text-neon">${w}</b><p class="text-zinc-300">${t}</p></div>`).join('');
+}
+$('#milestones').addEventListener('click', e => { const b = e.target.closest('.msbtn'); if (b) { openMs = openMs === b.dataset.ms ? '' : b.dataset.ms; renderPlan(); } });
+$('#milestones').addEventListener('change', e => {
+  const c = e.target.closest('.goalcb'); if (!c) return;
+  const g = S.get('goals', {}); (g[c.dataset.g] ||= [])[+c.dataset.k] = c.checked; S.set('goals', g);
+  if (c.checked) toast('¡Objetivo cumplido! 🥊'); renderPlan();
+});
+
+/* ==================== 4. AHORRO ==================== */
+const GOAL = 3600, DEADLINE = new Date(2026, 10, 30);
+const BREAK = [
+  { k: 'Inscripción + Mes 1 de gimnasio', v: 1000, c: '#e6ff00' },
+  { k: 'Equipo: guantes 14oz, vendas 4.5 m y cuerda', v: 900, c: '#ff2d3d' },
+  { k: 'Reserva mensualidades Mes 2 y 3', v: 1600, c: '#22c55e' },
+  { k: 'Protector bucal', v: 100, c: '#38bdf8' }
+];
+const PLAN = [
+  { k: 'Ahorro boxeo · 1ª quincena', v: 1200, note: 'Al cobrar, sepáralo en otra cuenta o sobre' },
+  { k: 'Ahorro boxeo · 2ª quincena', v: 1200, note: '$2,400 = 20% de tu ingreso mensual' },
+  { k: 'Ajuste de gastos variables', v: 1200, note: '≈ $300/semana menos en antojos, comida fuera y apps' }
+];
+const SHOP = [
+  { id: 'guantes', k: 'Guantes 14 oz', p: 550, tip: 'Peso estándar para costal y sparring en adulto' },
+  { id: 'vendas', k: 'Vendas 4.5 m (par)', p: 150, tip: 'Semi-elásticas; lávalas y sécalas extendidas' },
+  { id: 'cuerda', k: 'Cuerda de velocidad', p: 200, tip: 'Ajústala: mangos a la altura de las axilas' },
+  { id: 'bucal', k: 'Protector bucal', p: 100, tip: 'Termomoldeable; obligatorio para sparring' }
+];
+function savings() { return S.get('dep', []).reduce((a, d) => a + d.amt, 0); }
+function renderSavings() {
+  const sv = savings(), pct = Math.min(100, Math.round(sv / GOAL * 100)), left = Math.max(0, GOAL - sv), dl = daysUntil(DEADLINE);
+  $('#svSaved').textContent = money(sv); $('#svPct').textContent = pct + '%';
+  $('#svBar').style.width = pct + '%';
+  $('#svMsg').innerHTML = left === 0 ? '<b class="text-go">¡Meta lograda!</b> Tu entrada al gimnasio en diciembre está asegurada.'
+    : dl > 0 ? `Faltan <b class="text-neon">${money(left)}</b> · ${dl} días al 30 de noviembre ≈ <b>${money(left / dl * 7)}</b> por semana.`
+    : `Faltan <b class="text-blood">${money(left)}</b>. Ajusta y no uses la reserva para otra cosa.`;
+  let acc = 0;
+  $('#svBreak').innerHTML = `<div class="flex h-4 overflow-hidden rounded-full bg-steel">${BREAK.map(b => `<div style="width:${b.v / GOAL * 100}%;background:${b.c}" class="opacity-90"></div>`).join('')}</div>` +
+    BREAK.map(b => { const filled = Math.max(0, Math.min(b.v, sv - acc)); acc += b.v; return `
+      <div><div class="flex justify-between text-sm"><span class="flex items-center gap-2"><i class="inline-block h-3 w-3 rounded-full" style="background:${b.c}"></i>${b.k}</span><b>${money(b.v)}</b></div>
+      <div class="mt-1 h-1.5 overflow-hidden rounded-full bg-steel"><div class="h-full" style="width:${filled / b.v * 100}%;background:${b.c}"></div></div></div>`; }).join('');
+  $('#svPlan').innerHTML = PLAN.map(p => `
+    <div class="flex items-center justify-between rounded-xl bg-steel px-3 py-2">
+      <div><p class="text-sm font-semibold">${p.k}</p><p class="text-[11px] text-zinc-400">${p.note}</p></div>
+      <button data-q="${p.v}" class="svq rounded-lg bg-neon/15 px-3 py-1.5 font-display text-xl text-neon">${money(p.v)}</button>
+    </div>`).join('') + `<div class="flex justify-between border-t border-line px-1 pt-2 text-sm"><span class="text-zinc-400">Total del plan</span><b class="text-neon">$3,600</b></div>
+    <p class="text-[11px] text-zinc-400">Tus $8,400 restantes cubren vivienda, comida, transporte y servicios. Toca un monto para abonarlo.</p>`;
+  const shop = S.get('shop', {});
+  const spent = SHOP.reduce((a, x) => a + (shop[x.id]?.done ? (shop[x.id].paid ?? x.p) : 0), 0);
+  $('#shopTotal').textContent = `Gastado: ${money(spent)} · Est. total ${money(SHOP.reduce((a, x) => a + x.p, 0))}`;
+  $('#shopList').innerHTML = SHOP.map(x => { const st = shop[x.id] || {}; return `
+    <div class="flex items-center gap-3 rounded-xl bg-steel px-3 py-2.5 ${st.done ? 'opacity-60' : ''}">
+      <input type="checkbox" data-s="${x.id}" ${st.done ? 'checked' : ''} class="shopcb h-6 w-6 shrink-0 accent-[#e6ff00]">
+      <div class="min-w-0 flex-1"><p class="text-sm font-semibold ${st.done ? 'line-through' : ''}">${x.k}</p><p class="text-[11px] text-zinc-400">${x.tip}</p></div>
+      <button data-p="${x.id}" class="shopp font-display text-xl ${st.paid != null ? 'text-go' : 'text-neon'}">${money(st.paid ?? x.p)}</button>
+    </div>`; }).join('');
+  const dep = S.get('dep', []);
+  $('#svHist').innerHTML = dep.length ? dep.slice().reverse().map(d => `
+    <div class="flex items-center justify-between rounded-xl bg-steel px-3 py-2 text-sm">
+      <span>${fdate(d.date)}</span><span class="flex items-center gap-3"><b class="text-go">+${money(d.amt)}</b><button data-del="${d.id}" class="depdel text-zinc-500" aria-label="Borrar">✕</button></span>
+    </div>`).join('') : '<p class="text-xs text-zinc-500">Aún no hay abonos. El primero es el más importante.</p>';
+}
+function addDeposit(amt) {
+  amt = Math.round(+amt * 100) / 100;
+  if (!(amt > 0)) { toast('Escribe un monto válido'); return; }
+  const before = savings(), dep = S.get('dep', []); dep.push({ id: uid(), amt, date: todayISO() }); S.set('dep', dep);
+  $('#svAmt').value = ''; renderSavings();
+  if (before < GOAL && before + amt >= GOAL) { ac(); bell(3); toast('🏆 ¡Fondo de Guantes completo!'); } else toast(`+${money(amt)} al fondo`);
+}
+$('#svAdd').onclick = () => addDeposit($('#svAmt').value);
+$('#tab-ahorro').addEventListener('click', e => {
+  const q = e.target.closest('.svq'); if (q) return addDeposit(q.dataset.q);
+  const d = e.target.closest('.depdel'); if (d && confirm('¿Borrar este abono?')) { S.set('dep', S.get('dep', []).filter(x => x.id !== d.dataset.del)); renderSavings(); }
+  const p = e.target.closest('.shopp');
+  if (p) { const v = prompt('¿Cuánto pagaste? (MXN)'); if (v !== null && +v >= 0 && v.trim() !== '') { const s = S.get('shop', {}); (s[p.dataset.p] ||= {}).paid = +v; S.set('shop', s); renderSavings(); } }
+});
+$('#tab-ahorro').addEventListener('change', e => { const c = e.target.closest('.shopcb'); if (!c) return; const s = S.get('shop', {}); (s[c.dataset.s] ||= {}).done = c.checked; S.set('shop', s); renderSavings(); });
+
+/* ==================== 5. DIARIO, MÉTRICAS Y LESIONES ==================== */
+const PAIN_D = ['Sin dolor', 'Apenas se siente', 'Leve', 'Leve, molesta un poco', 'Moderado', 'Molesta al moverme', 'Fuerte', 'Muy fuerte', 'Limita el movimiento', 'Dolor intenso'];
+const CANS_D = ['Nada de cansancio', 'Muy ligero', 'Ligero', 'Moderado', 'Me cuesta un poco', 'Respiración agitada', 'Pesado', 'Muy pesado', 'Casi sin aire', 'No aguanto la respiración'];
+const SL = [
+  { id: 'coo', label: 'Coordinación técnica', max: 5, def: 3, color: 'text-neon', d: ['Todo descoordinado', 'Me costó mucho', 'Regular', 'Fluyó bien', 'Salió natural'] },
+  { id: 'cans', label: 'Nivel de cansancio', max: 10, def: 5, color: 'text-blood', d: CANS_D, hint: '1 = nada de cansancio · 10 = no aguantas la respiración' },
+  { id: 'dolor', label: 'Dolor muscular al terminar', max: 10, def: 1, color: 'text-orange-400', d: PAIN_D, hint: '1 = sin dolor · 10 = dolor intenso' }
+];
+const SL24 = [{ id: 'dolor24', label: 'Dolor muscular hoy', max: 10, def: 1, color: 'text-sky-400', d: PAIN_D, hint: '1 = sin dolor · 10 = dolor intenso' }];
+const sliderHtml = (s, pre) => `<div>
+  <div class="flex items-baseline justify-between gap-2"><span class="text-sm font-semibold">${s.label}</span>
+  <span class="shrink-0"><b id="${pre}v_${s.id}" class="font-display text-2xl ${s.color}">${s.def}</b><span class="text-xs text-zinc-500">/${s.max}</span></span></div>
+  <input id="${pre}s_${s.id}" data-sl="${s.id}" data-pre="${pre}" type="range" min="1" max="${s.max}" step="1" value="${s.def}">
+  <p id="${pre}t_${s.id}" class="mt-0.5 text-xs font-semibold text-zinc-200">${s.d[s.def - 1]}</p>
+  ${s.hint ? `<p class="text-[11px] text-zinc-500">${s.hint}</p>` : ''}</div>`;
+$('#dSliders').innerHTML = SL.map(s => sliderHtml(s, '')).join('');
+document.addEventListener('input', e => {
+  const el = e.target; if (!el.dataset || !el.dataset.sl) return;
+  const s = [...SL, ...SL24].find(x => x.id === el.dataset.sl), pre = el.dataset.pre || '';
+  $('#' + pre + 'v_' + s.id).textContent = el.value; $('#' + pre + 't_' + s.id).textContent = s.d[el.value - 1];
+});
+
+/* ---- Mapa anatómico muscular ---- */
+const MUS = [
+  { id: 'cuello', n: 'Cuello' }, { id: 'trapecio', n: 'Trapecio' }, { id: 'hombros', n: 'Hombros' }, { id: 'pecho', n: 'Pecho' },
+  { id: 'biceps', n: 'Bíceps' }, { id: 'triceps', n: 'Tríceps' }, { id: 'antebrazos', n: 'Antebrazos' }, { id: 'abdomen', n: 'Abdomen' },
+  { id: 'oblicuos', n: 'Oblicuos' }, { id: 'dorsales', n: 'Espalda alta' }, { id: 'lumbar', n: 'Espalda baja' }, { id: 'gluteos', n: 'Glúteos' },
+  { id: 'cuadriceps', n: 'Cuádriceps' }, { id: 'isquios', n: 'Isquiotibiales' }, { id: 'pantorrillas', n: 'Pantorrillas' }, { id: 'tibiales', n: 'Espinillas' }
+];
+const musName = id => MUS.find(m => m.id === id)?.n || id;
+const MUS_TIP = {
+  cuello: 'Revisa no encoger los hombros en guardia; isométricos suaves y calor local.',
+  trapecio: 'Suele venir de tensar la guardia: relaja hombros entre golpes y estira inclinando la cabeza.',
+  hombros: 'Normal al empezar por la guardia y las ráfagas: rotaciones externas con liga 3×15 y baja el volumen de ráfagas 2 días.',
+  pecho: 'Típico tras lagartijas o rectos fuertes: estira en marco de puerta 30 s por lado.',
+  biceps: 'Viene de sostener la guardia: estira con el brazo extendido y la palma hacia arriba.',
+  triceps: 'Normal tras rectos y lagartijas; no trabes el codo al golpear al aire.',
+  antebrazos: 'Aprietas el puño todo el tiempo: ciérralo solo al impactar.',
+  abdomen: 'Buena señal de trabajo de core; respira profundo y estira en cobra suave.',
+  oblicuos: 'El giro de cadera los trabaja: estiramiento lateral 30 s por lado.',
+  dorsales: 'Movilidad de hombros y estiramiento colgándote de una barra o marco.',
+  lumbar: 'Revisa que el giro salga de la cadera; si el dolor es punzante o baja a la pierna, consulta a un médico.',
+  gluteos: 'Normal tras sentadillas y trabajo de pies: estira en figura 4.',
+  cuadriceps: 'Típico tras sentadillas y saltos: camina suave y estira llevando el talón al glúteo.',
+  isquios: 'Estira con piernas estiradas sin rebotar; evita saltos fuertes hoy.',
+  pantorrillas: 'Cuerda y rebote sobre las puntas: estira contra la pared 30 s y masajea.',
+  tibiales: 'Suele ser por saltar en piso duro: busca superficie más blanda; si duele un punto muy localizado, consulta.'
+};
+const SIL = [
+  ['e', [60, 19, 11, 13, 0], 0], ['p', [[54, 30], [66, 30], [67, 46], [53, 46]], 0],
+  ['p', [[42, 44], [78, 44], [85, 60], [80, 124], [40, 124], [35, 60]], 0], ['p', [[40, 120], [80, 120], [83, 140], [60, 146], [37, 140]], 0],
+  ['e', [31, 80, 7.5, 15, 10], 1], ['e', [26, 110, 6.5, 16, 12], 1], ['e', [22, 131, 5, 7, 8], 1],
+  ['e', [49, 162, 11.5, 30, -3], 1], ['e', [48, 192, 6, 5, 0], 1], ['e', [48, 214, 7.5, 22, 0], 1], ['e', [46, 240, 7, 4, 0], 1]
+];
+const MSH = {
+  f: [
+    ['cuello', 'p', [[54, 34], [66, 34], [68, 44], [52, 44]], 0], ['hombros', 'e', [37, 55, 9, 10, 0], 1],
+    ['pecho', 'p', [[60, 48], [45, 49], [39, 58], [42, 72], [60, 74]], 1], ['biceps', 'e', [31, 80, 6, 13, 10], 1],
+    ['antebrazos', 'e', [26, 110, 5.5, 15, 12], 1], ['abdomen', 'p', [[52, 77], [68, 77], [67, 121], [53, 121]], 0],
+    ['oblicuos', 'e', [45, 99, 5, 17, 0], 1], ['cuadriceps', 'e', [49, 160, 10, 28, -3], 1], ['tibiales', 'e', [48, 214, 6, 20, 0], 1]
+  ],
+  b: [
+    ['trapecio', 'p', [[60, 33], [42, 51], [60, 72], [78, 51]], 0], ['hombros', 'e', [37, 55, 9, 10, 0], 1],
+    ['dorsales', 'p', [[58, 60], [44, 60], [39, 74], [46, 97], [58, 102]], 1], ['triceps', 'e', [31, 80, 6, 13, 10], 1],
+    ['antebrazos', 'e', [26, 110, 5.5, 15, 12], 1], ['lumbar', 'p', [[52, 102], [68, 102], [68, 124], [52, 124]], 0],
+    ['gluteos', 'e', [50, 137, 10, 11, 0], 1], ['isquios', 'e', [49, 170, 9.5, 23, -3], 1], ['pantorrillas', 'e', [48, 212, 7, 18, 0], 1]
+  ]
+};
+const LVN = ['', 'leve', 'moderado', 'fuerte'], LVC = ['#3f3f46', '#e6ff00', '#f97316', '#ff2d3d'];
+function shp(t, g, mir, attrs) {
+  const one = mx => {
+    if (t === 'e') { const [cx, cy, rx, ry, rot] = g, x = mx ? 120 - cx : cx; return `<ellipse cx="${x}" cy="${cy}" rx="${rx}" ry="${ry}" transform="rotate(${mx ? -rot : rot} ${x} ${cy})" ${attrs}/>`; }
+    return `<polygon points="${g.map(([x, y]) => `${mx ? 120 - x : x},${y}`).join(' ')}" ${attrs}/>`;
+  };
+  return one(false) + (mir ? one(true) : '');
+}
+function mapSvg(fill, interactive) {
+  const fig = (side, dx) => `<g transform="translate(${dx},0)">${SIL.map(([t, g, m]) => shp(t, g, m, 'fill="#26272c"')).join('')}${MSH[side].map(([id, t, g, m]) => shp(t, g, m, `data-m="${id}" fill="${fill(id)}" stroke="#0a0a0b" stroke-width="1.2"${interactive ? ' style="cursor:pointer"' : ''}`)).join('')}<text x="60" y="258" text-anchor="middle" font-size="10" font-weight="700" fill="#a1a1aa" letter-spacing="2">${side === 'f' ? 'FRENTE' : 'ESPALDA'}</text></g>`;
+  return `<svg viewBox="0 0 250 262" class="mx-auto block w-full max-w-xs select-none" role="img" aria-label="Mapa muscular">${fig('f', 0)}${fig('b', 130)}</svg>`;
+}
+function createMuscleMap(host, o = {}) {
+  let st = {};
+  const draw = () => {
+    const heat = o.heat ? o.heat() : null, mx = heat ? Math.max(1, ...Object.values(heat)) : 1;
+    const fill = id => heat ? (heat[id] ? `rgba(255,45,61,${(.3 + .7 * heat[id] / mx).toFixed(2)})` : '#3f3f46') : LVC[st[id] || 0];
+    const sel = Object.entries(st);
+    host.innerHTML = mapSvg(fill, !o.readOnly) + (o.readOnly ? '' : `<div class="mt-2 flex flex-wrap gap-1.5">${sel.length ? sel.map(([id, l]) => `<span class="rounded-full px-2 py-0.5 text-xs font-bold" style="background:${LVC[l]};color:${l === 1 ? '#0a0a0b' : '#fff'}">${musName(id)} · ${LVN[l]}</span>`).join('') : '<span class="text-xs text-zinc-500">Sin dolor marcado</span>'}</div>${o.tips && sel.length ? `<ul class="mt-2 space-y-1 text-xs text-zinc-300">${sel.map(([id]) => `<li>• <b>${musName(id)}:</b> ${MUS_TIP[id]}</li>`).join('')}</ul>` : ''}`);
+  };
+  if (!o.readOnly) host.addEventListener('click', e => { const t = e.target.closest('[data-m]'); if (!t) return; const id = t.dataset.m; st[id] = ((st[id] || 0) + 1) % 4; if (!st[id]) delete st[id]; draw(); });
+  draw();
+  return { get: () => ({ ...st }), set(v) { st = { ...(v || {}) }; draw(); }, redraw: draw };
+}
+const normD = d => ({ ...d, cans: d.cans ?? (d.car != null ? 11 - d.car * 2 : null), dolor: d.dolor ?? (d.mus != null ? (6 - d.mus) * 2 : null) });
+function heat14() {
+  const lim = new Date(); lim.setHours(0, 0, 0, 0); lim.setDate(lim.getDate() - 13); const h = {};
+  S.get('diary', []).filter(d => parseISO(d.date) >= lim).forEach(d => [d.zonas, d.zonas24].forEach(z => Object.entries(z || {}).forEach(([id, l]) => h[id] = (h[id] || 0) + l)));
+  return h;
+}
+const mapPost = createMuscleMap($('#mapPost'), { tips: true });
+const mapHeat = createMuscleMap($('#mapHeat'), { readOnly: true, heat: heat14 });
+$('#dDate').value = todayISO();
+
+$('#dSave').onclick = () => {
+  const met = readMetrics(); if (!met.ok) return;
+  const list = S.get('diary', []);
+  list.push({ id: uid(), date: $('#dDate').value || todayISO(), type: $('#dType').value, coo: +$('#s_coo').value, cans: +$('#s_cans').value, dolor: +$('#s_dolor').value, zonas: mapPost.get(), note: $('#dNote').value.trim(), ...met.out });
+  list.sort((a, b) => a.date.localeCompare(b.date)); S.set('diary', list);
+  $('#dNote').value = ''; clearMetrics(); mapPost.set({}); renderDiary(); toast('Sesión registrada 💪 · +3 puntos');
+};
+function drawDiaryChart() {
+  const rows = S.get('diary', []).slice(-14).map(d => { const n = normD(d); return { ...n, coo2: n.coo != null ? n.coo * 2 : null }; });
+  lineChart($('#dChart'), rows, [{ k: 'cans', c: '#ff2d3d' }, { k: 'dolor', c: '#f97316' }, { k: 'dolor24', c: '#38bdf8' }, { k: 'coo2', c: '#e6ff00' }], { min: 1, max: 10, empty: 'Registra tu primera sesión' });
+}
+function pendingFollow() {
+  const t = todayISO(), lim = new Date(); lim.setHours(0, 0, 0, 0); lim.setDate(lim.getDate() - 3);
+  return S.get('diary', []).slice().reverse().find(d => d.date < t && d.dolor24 == null && parseISO(d.date) >= lim) || null;
+}
+function renderNextDay() {
+  const p = pendingFollow(), host = $('#nextDay');
+  if (!p) {
+    const hasToday = S.get('diary', []).some(d => d.date === todayISO());
+    host.innerHTML = `<p class="text-xs font-bold tracking-widest text-sky-400">DOLOR AL DÍA SIGUIENTE</p><p class="mt-1 text-sm text-zinc-400">${hasToday ? 'Mañana regresa a registrar cómo amaneciste de la sesión de hoy: el dolor que aparece a las 24–48 h es el que mejor indica la carga real.' : 'Cuando registres una sesión, al día siguiente aquí te preguntaré cómo amaneciste.'}</p>`;
+    return;
+  }
+  host.innerHTML = `<p class="text-xs font-bold tracking-widest text-sky-400">DOLOR AL DÍA SIGUIENTE</p>
+    <p class="mt-1 font-display text-2xl leading-tight">¿Cómo amaneciste después del ${fdate(p.date)}?</p>
+    <p class="mb-3 text-xs text-zinc-400">Sesión de ${esc(p.type)}${p.dolor != null ? ` · al terminar marcaste dolor ${p.dolor}/10` : ''}. Ajusta el mapa a como te sientes hoy.</p>
+    ${SL24.map(s => sliderHtml(s, 'n')).join('')}
+    <div id="mapNext" class="mt-3"></div>
+    <button id="nSave" class="btn mt-3 w-full bg-sky-400 text-ink">Guardar seguimiento · +1 punto</button>`;
+  const mapNext = createMuscleMap($('#mapNext'), { tips: true }); mapNext.set(p.zonas || {});
+  $('#nSave').onclick = () => {
+    const list = S.get('diary', []), e = list.find(x => x.id === p.id); if (!e) return;
+    e.dolor24 = +$('#ns_dolor24').value; e.zonas24 = mapNext.get(); S.set('diary', list);
+    toast('Seguimiento guardado'); renderDiary();
+  };
+}
+const zonasTxt = (z, label) => { const e = Object.entries(z || {}); return e.length ? `<p class="text-[11px] text-zinc-400">${label}: ${e.map(([id, l]) => `${musName(id)} (${LVN[l]})`).join(', ')}</p>` : ''; };
+function renderDiary() {
+  const list = S.get('diary', []).map(normD), last5 = list.slice(-5);
+  const av = k => avg(last5.filter(d => d[k] != null).map(d => d[k]));
+  const ins = [];
+  if (!list.length) ins.push(['info', 'Registra cada sesión al terminar: en 2 semanas verás tu tendencia real.']);
+  else {
+    const gap = -daysUntil(parseISO(list[list.length - 1].date));
+    if (gap >= 4) ins.push(['bad', `Llevas ${gap} días sin registrar: estás perdiendo puntos de constancia. Haz aunque sea 3 rounds de sombra hoy.`]);
+    const mon = new Date(); mon.setHours(0, 0, 0, 0); mon.setDate(mon.getDate() - ((mon.getDay() + 6) % 7));
+    const wk = new Set(list.filter(d => parseISO(d.date) >= mon).map(d => d.date)).size;
+    ins.push([wk >= 4 ? 'good' : 'info', `Esta semana: ${wk}/4 días entrenados${wk >= 4 ? ' · ¡semana completa, +10 puntos!' : ''}`]);
+    const c = av('cans'), co = av('coo'), d24 = av('dolor24');
+    if (c != null && c >= 8) ins.push(['bad', 'Cansancio muy alto (8+/10): alarga los descansos o baja el ritmo de las ráfagas. Si te falta el aire en reposo o sientes dolor de pecho, consulta a un médico.']);
+    else if (c != null && c <= 3) ins.push(['good', 'Te sobra aire: sube la intensidad con un round extra o ráfagas más largas.']);
+    if (co != null && co <= 2.2) ins.push(['info', 'La descoordinación es normal las primeras 8–12 semanas. Repasa en Técnica a velocidad lenta y celebra una mejora por sesión.']);
+    if (d24 != null && d24 >= 7) ins.push(['bad', 'Amaneces con mucho dolor muscular: la carga es alta. Mete un día de Recuperación activa antes de volver a potencia.']);
+    if (list.length >= 6) {
+      const a = list.slice(-6, -3).filter(d => d.cans != null).map(d => d.cans), b = list.slice(-3).filter(d => d.cans != null).map(d => d.cans);
+      if (a.length && b.length && avg(b) < avg(a) - .5) ins.push(['good', 'Tu cansancio va bajando con el mismo trabajo: tu condición mejora.']);
+    }
+  }
+  const hm = Object.entries(heat14()).sort((a, b) => b[1] - a[1]);
+  if (hm[0] && hm[0][1] >= 4) ins.push(['info', `${musName(hm[0][0])} es la zona que más te duele en 2 semanas. ${MUS_TIP[hm[0][0]]}`]);
+  const cls = { bad: 'border-blood/50 bg-blood/10 text-red-200', good: 'border-go/50 bg-go/10 text-green-200', info: 'border-line bg-steel text-zinc-300' };
+  $('#dInsights').innerHTML = ins.map(([k, t]) => `<p class="rounded-xl border px-3 py-2 text-sm ${cls[k]}">${t}</p>`).join('');
+  $('#heatTop').innerHTML = hm.length ? 'Más frecuentes: ' + hm.slice(0, 3).map(([id]) => `<b class="text-zinc-200">${musName(id)}</b>`).join(', ') : 'Aún no has marcado dolores musculares.';
+  mapHeat.redraw();
+  const inj = S.get('inj', []);
+  const items = [...list.map(d => ({ ...d, kind: 'd' })), ...inj.map(d => ({ ...d, kind: 'i' }))].sort((a, b) => b.date.localeCompare(a.date) || (b.id > a.id ? 1 : -1)).slice(0, 20);
+  $('#dHist').innerHTML = items.length ? items.map(d => d.kind === 'd' ? `
+    <div class="rounded-xl bg-steel px-3 py-2 text-sm">
+      <div class="flex justify-between"><b>${fdate(d.date)} · ${esc(d.type)}</b><button data-del="${d.id}" data-k="diary" class="hdel text-zinc-500" aria-label="Borrar">✕</button></div>
+      <p class="text-xs"><span class="text-neon">Coord. ${d.coo}/5</span>${d.cans != null ? ` · <span class="text-blood">Cansancio ${Math.round(d.cans)}/10</span>` : ''}${d.dolor != null ? ` · <span class="text-orange-400">Dolor ${Math.round(d.dolor)}/10</span>` : ''}${d.dolor24 != null ? ` · <span class="text-sky-400">Día sig. ${d.dolor24}/10</span>` : ''}</p>
+      ${zonasTxt(d.zonas, 'Al terminar')}${zonasTxt(d.zonas24, 'Día siguiente')}${metricLine(d)}
+      ${d.note ? `<p class="mt-1 text-xs text-zinc-400">${esc(d.note)}</p>` : ''}</div>` : `
+    <div class="rounded-xl border border-blood/40 bg-blood/5 px-3 py-2 text-sm">
+      <div class="flex justify-between"><b class="text-blood">${fdate(d.date)} · Articulaciones</b><button data-del="${d.id}" data-k="inj" class="hdel text-zinc-500" aria-label="Borrar">✕</button></div>
+      <p class="text-xs text-zinc-300">${Object.entries(d.z).map(([z, l]) => `${ZONES.find(x => x.id === z)?.k} (${LV[l]})`).join(' · ')}</p></div>`).join('')
+    : '<p class="text-xs text-zinc-500">Sin registros todavía.</p>';
+  drawDiaryChart(); renderEval(); renderNextDay();
+}
+$('#dHist').addEventListener('click', e => { const b = e.target.closest('.hdel'); if (!b || !confirm('¿Borrar este registro?')) return; S.set(b.dataset.k, S.get(b.dataset.k, []).filter(x => x.id !== b.dataset.del)); renderDiary(); });
+
+/* ---- Métricas corporales y valoración ---- */
+const MF = [
+  { id: 'peso', el: '#mPeso', min: 35, max: 200, l: 'Peso' }, { id: 'fc', el: '#mFc', min: 30, max: 130, l: 'FC reposo' },
+  { id: 'sueno', el: '#mSueno', min: 0, max: 16, l: 'Sueño' }, { id: 'agua', el: '#mAgua', min: 0, max: 10, l: 'Agua' },
+  { id: 'rounds', el: '#mRounds', min: 0, max: 40, l: 'Rounds' }
+];
+const MEAS = [
+  { id: 'cuello', l: 'Cuello' }, { id: 'pecho', l: 'Pecho' }, { id: 'cintura', l: 'Cintura' }, { id: 'cadera', l: 'Cadera' },
+  { id: 'biceps', l: 'Bíceps' }, { id: 'antebrazo', l: 'Antebrazo' }, { id: 'muslo', l: 'Muslo' }, { id: 'pantorrilla', l: 'Pantorrilla' }
+];
+MEAS.forEach(m => MF.push({ id: m.id, el: '#m_' + m.id, min: 15, max: 200, l: m.l }));
+function readMetrics() {
+  const out = {}, bad = [];
+  MF.forEach(m => { const raw = $(m.el).value.trim(); if (!raw) return; const v = parseFloat(raw.replace(',', '.')); if (isFinite(v) && v >= m.min && v <= m.max) out[m.id] = v; else bad.push(m.l); });
+  if (bad.length) toast('Revisa: ' + bad.join(', '));
+  return { out, ok: !bad.length };
+}
+const clearMetrics = () => MF.forEach(m => $(m.el).value = '');
+const WCATS = [50, 55, 60, 65, 70, 75, 80, 85, 90];
+function weightCat(kg) { const top = WCATS.find(c => kg <= c); return top ? { name: `hasta ${top} kg`, gap: top - kg } : { name: 'más de 90 kg', gap: null }; }
+function metricLine(d) {
+  const p = [];
+  if (d.peso != null) p.push(`${d.peso} kg`);
+  if (d.fc != null) p.push(`FC ${d.fc}`);
+  if (d.sueno != null) p.push(`Sueño ${d.sueno} h`);
+  if (d.agua != null) p.push(`Agua ${d.agua} L`);
+  if (d.rounds != null) p.push(`${d.rounds} rounds`);
+  const cm = MEAS.filter(m => d[m.id] != null).map(m => `${m.l} ${d[m.id]}`);
+  if (cm.length) p.push(cm.join(', ') + ' cm');
+  return p.length ? `<p class="mt-0.5 text-xs text-sky-300">${p.join(' · ')}</p>` : '';
+}
+const EVM = {
+  peso: { l: 'Peso', u: 'kg', s: [{ k: 'peso', c: '#e6ff00', n: 'Peso' }] },
+  cans: { l: 'Cansancio', u: '1–10', s: [{ k: 'cans', c: '#ff2d3d', n: 'Cansancio' }], min: 1, max: 10 },
+  dolor: { l: 'Dolor muscular', u: '1–10', s: [{ k: 'dolor', c: '#f97316', n: 'Al terminar' }, { k: 'dolor24', c: '#38bdf8', n: 'Día siguiente' }], min: 1, max: 10 },
+  fc: { l: 'FC reposo', u: 'lpm', s: [{ k: 'fc', c: '#ff2d3d', n: 'FC' }] },
+  sueno: { l: 'Sueño', u: 'h', s: [{ k: 'sueno', c: '#a78bfa', n: 'Horas' }] }
+};
+const MCOL = ['#e6ff00', '#38bdf8', '#ff2d3d', '#f97316', '#22c55e', '#a78bfa', '#f472b6', '#facc15'];
+MEAS.forEach((m, i) => { EVM[m.id] = { l: m.l, u: 'cm', s: [{ k: m.id, c: MCOL[i], n: m.l }] }; });
+let evMetric = S.get('evMetric', 'peso'); if (!EVM[evMetric]) evMetric = 'peso';
+function lineChart(cv, rows, series, o = {}) {
+  if (!cv || !cv.clientWidth) return;
+  const dpr = devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight; cv.width = w * dpr; cv.height = h * dpr;
+  const c = cv.getContext('2d'); c.scale(dpr, dpr); c.font = '10px Inter';
+  const vals = rows.flatMap(r => series.map(s => r[s.k])).filter(v => v != null);
+  if (!vals.length) { c.fillStyle = '#a1a1aa'; c.textAlign = 'center'; c.font = '13px Inter'; c.fillText(o.empty || 'Aún no hay datos de esta métrica', w / 2, h / 2); return; }
+  let mn = o.min ?? Math.min(...vals), mx = o.max ?? Math.max(...vals);
+  if (o.min == null) { const pd = (mx - mn) * .15 || Math.max(1, Math.abs(mx) * .02); mn -= pd; mx += pd; }
+  const pl = 34, pr = 8, pt = 8, pb = 20, n = rows.length;
+  const X = i => pl + (n < 2 ? (w - pl - pr) / 2 : i * (w - pl - pr) / (n - 1)), Y = v => pt + (mx - v) * (h - pt - pb) / (mx - mn);
+  c.strokeStyle = '#2a2b31'; c.fillStyle = '#71717a'; c.lineWidth = 1; c.textAlign = 'left';
+  for (let g = 0; g <= 4; g++) { const v = mn + (mx - mn) * g / 4; c.beginPath(); c.moveTo(pl, Y(v)); c.lineTo(w - pr, Y(v)); c.stroke(); c.fillText(v.toFixed(mx - mn < 10 ? 1 : 0), 2, Y(v) + 3); }
+  c.textAlign = 'center';
+  const stepL = Math.ceil(n / 6);
+  rows.forEach((r, i) => { if (n <= 7 || i % stepL === 0 || i === n - 1) c.fillText(fdate(r.date), X(i), h - 4); });
+  series.forEach(s => {
+    c.strokeStyle = s.c; c.fillStyle = s.c; c.lineWidth = 2.5; c.lineJoin = 'round'; c.beginPath();
+    let st = false; rows.forEach((r, i) => { const v = r[s.k]; if (v == null) return; if (st) c.lineTo(X(i), Y(v)); else { c.moveTo(X(i), Y(v)); st = true; } }); c.stroke();
+    rows.forEach((r, i) => { const v = r[s.k]; if (v == null) return; c.beginPath(); c.arc(X(i), Y(v), 3.5, 0, 7); c.fill(); });
+  });
+}
+function drawEvChart() {
+  const m = EVM[evMetric];
+  const rows = S.get('diary', []).map(normD).filter(d => m.s.some(s => d[s.k] != null)).slice(-20);
+  lineChart($('#evChart'), rows, m.s, { min: m.min, max: m.max, empty: `Registra ${m.l.toLowerCase()} en el diario para ver la gráfica` });
+}
+function renderEval() {
+  const L = S.get('diary', []).map(normD);
+  const lastOf = k => { for (let i = L.length - 1; i >= 0; i--) if (L[i][k] != null) return L[i]; return null; };
+  const firstOf = k => L.find(d => d[k] != null) || null;
+  const avgOf = (k, n = 5) => avg(L.filter(d => d[k] != null).slice(-n).map(d => d[k]));
+  const A = computeAreas();
+  $('#evScore').textContent = A.general + '/100';
+  $('#evScore').className = `rounded-full bg-steel px-3 py-1 font-display text-2xl ${A.general >= 80 ? 'text-go' : A.general >= 50 ? 'text-neon' : 'text-blood'}`;
+  const tile = (t, v, sub, cls = '') => `<div class="rounded-xl bg-steel p-3"><p class="text-[10px] font-bold tracking-wider text-zinc-400">${t}</p><p class="font-display text-3xl leading-none ${cls}">${v}</p><p class="mt-1 text-[11px] text-zinc-400">${sub}</p></div>`;
+  const tiles = [`<div class="col-span-2 rounded-xl bg-steel p-3"><p class="mb-2 text-[10px] font-bold tracking-wider text-zinc-400">PUNTAJE GENERAL POR ÁREA · DETALLE EN PERFIL</p>${AREAS.map(a => `
+    <div class="mb-1.5 flex items-center gap-2 text-xs"><span class="w-28 shrink-0 text-zinc-300">${a.n}</span><div class="h-2 flex-1 overflow-hidden rounded-full bg-ink"><div class="h-full rounded-full bg-neon" style="width:${A.v[a.k]}%"></div></div><span class="w-8 text-right font-bold">${A.v[a.k]}</span></div>`).join('')}</div>`];
+  const lp = lastOf('peso'), fp = firstOf('peso');
+  if (lp) { const dW = lp.peso - fp.peso, cat = weightCat(lp.peso); tiles.push(tile('PESO', lp.peso.toFixed(1) + ' kg', `${fp !== lp ? (dW > 0 ? '+' : '') + dW.toFixed(1) + ' kg desde el inicio · ' : ''}Cat. ${cat.name}${cat.gap != null ? ` (margen ${cat.gap.toFixed(1)} kg)` : ''}`)); }
+  else tiles.push(tile('PESO', '–', 'Sin registros'));
+  const lf = lastOf('fc'), ff = firstOf('fc');
+  tiles.push(lf ? tile('FC REPOSO', lf.fc + ' lpm', ff !== lf ? `${lf.fc - ff.fc > 0 ? '+' : ''}${lf.fc - ff.fc} lpm desde el inicio` : 'Primer registro', lf.fc <= ff.fc ? 'text-go' : '') : tile('FC REPOSO', '–', 'Sin registros'));
+  const ac5 = avgOf('cans'), ad5 = avgOf('dolor'), a24 = avgOf('dolor24'), as = avgOf('sueno');
+  tiles.push(tile('CANSANCIO', ac5 != null ? ac5.toFixed(1) + '/10' : '–', 'Promedio últimas 5', ac5 >= 8 ? 'text-blood' : ''));
+  tiles.push(tile('DOLOR MUSCULAR', ad5 != null ? ad5.toFixed(1) + '/10' : '–', a24 != null ? `Día siguiente: ${a24.toFixed(1)}/10` : 'Al terminar · prom. 5'));
+  const measRows = MEAS.map(m => { const l = lastOf(m.id), f0 = firstOf(m.id); return l ? { m, v: l[m.id], d: l[m.id] - f0[m.id] } : null; }).filter(Boolean);
+  tiles.push(`<div class="col-span-2 rounded-xl bg-steel p-3"><p class="mb-2 text-[10px] font-bold tracking-wider text-zinc-400">MEDIDAS (CM) · ACTUAL Y CAMBIO DESDE EL INICIO</p>${measRows.length ? `<div class="grid grid-cols-2 gap-x-4 gap-y-1.5">${measRows.map(r => {
+    const good = r.m.id === 'cintura' || r.m.id === 'cadera' ? r.d < 0 : r.d > 0;
+    return `<div class="flex items-baseline justify-between text-sm"><span class="text-zinc-300">${r.m.l}</span><span><b>${r.v}</b> <span class="text-[11px] ${r.d === 0 ? 'text-zinc-500' : good ? 'text-go' : 'text-orange-400'}">${r.d > 0 ? '+' : ''}${r.d.toFixed(1)}</span></span></div>`; }).join('')}</div>` : '<p class="text-xs text-zinc-500">Mide cintura, pecho, bíceps y muslo cada 2 semanas, en la mañana y con cinta flexible.</p>'}${as != null ? `<p class="mt-2 text-[11px] text-zinc-400">Sueño promedio: <b class="${as < 7 ? 'text-blood' : 'text-go'}">${as.toFixed(1)} h</b></p>` : ''}</div>`);
+  $('#evTiles').innerHTML = tiles.join('');
+  $('#evChips').innerHTML = Object.entries(EVM).map(([k, m]) => `<button data-ev="${k}" class="shrink-0 rounded-full px-3 py-1.5 text-sm font-semibold ${k === evMetric ? 'bg-neon text-ink' : 'bg-steel text-zinc-300'}">${m.l}</button>`).join('');
+  $('#evLegend').innerHTML = EVM[evMetric].s.map(s => `<span style="color:${s.c}">● ${s.n}</span>`).join(' ') + ` <span class="text-zinc-500">(${EVM[evMetric].u})</span>`;
+  const notes = [];
+  if (!L.some(d => MF.some(m => d[m.id] != null))) notes.push(['info', 'Agrega peso, FC y medidas en tus registros para activar la valoración completa.']);
+  const fcs = L.filter(d => d.fc != null);
+  if (fcs.length >= 3) {
+    const lastFc = fcs[fcs.length - 1].fc, prev = fcs.slice(-8, -1), pa = avg(prev.map(d => d.fc));
+    if (lastFc >= pa + 7) notes.push(['bad', `Tu FC en reposo está ${Math.round(lastFc - pa)} lpm arriba de tu promedio: posible fatiga acumulada o mal descanso. Haz hoy una sesión ligera.`]);
+    else if (fcs[0].fc - lastFc >= 5) notes.push(['good', `Tu FC en reposo bajó ${fcs[0].fc - lastFc} lpm desde que empezaste: tu corazón se está adaptando.`]);
+  }
+  const ws = L.filter(d => d.peso != null);
+  if (ws.length >= 2) {
+    const lw = ws[ws.length - 1], ref = ws.slice().reverse().find(d => (parseISO(lw.date) - parseISO(d.date)) / 864e5 >= 6);
+    if (ref) { const dd = lw.peso - ref.peso; if (Math.abs(dd) > 1) notes.push(['info', `Cambio de ${dd > 0 ? '+' : ''}${dd.toFixed(1)} kg en una semana aprox. Para ajustar categoría, apunta a 0.5–1 kg por semana sin deshidratarte.`]); }
+  }
+  const lc = lastOf('cintura');
+  if (lc && firstOf('cintura') !== lc) {
+    const dc = lc.cintura - firstOf('cintura').cintura, dp = lp && fp !== lp ? lp.peso - fp.peso : null;
+    if (dc <= -1 && (dp == null || Math.abs(dp) < 1.5)) notes.push(['good', `Tu cintura bajó ${Math.abs(dc).toFixed(1)} cm${dp != null ? ' con un peso casi igual' : ''}: estás perdiendo grasa y ganando músculo.`]);
+    else if (dc >= 2) notes.push(['info', `Tu cintura subió ${dc.toFixed(1)} cm: revisa refresco, pan dulce y cenas tarde.`]);
+  }
+  const bi = lastOf('biceps');
+  if (bi && firstOf('biceps') !== bi && bi.biceps - firstOf('biceps').biceps >= 1) notes.push(['good', `Bíceps +${(bi.biceps - firstOf('biceps').biceps).toFixed(1)} cm desde el inicio: tus brazos ganan masa para aguantar la guardia.`]);
+  if (as != null && as < 7) notes.push(['info', 'Duermes menos de 7 h en promedio: el sueño es donde se recuperan hombros y piernas. Intenta acostarte 30 min antes.']);
+  notes.push(['info', 'Mide la FC en reposo al despertar, sentado 1 minuto. Justo después de entrenar sale más alta y no sirve para comparar.']);
+  const cls = { bad: 'border-blood/50 bg-blood/10 text-red-200', good: 'border-go/50 bg-go/10 text-green-200', info: 'border-line bg-steel text-zinc-300' };
+  $('#evNotes').innerHTML = notes.map(([k, t]) => `<p class="rounded-xl border px-3 py-2 text-sm ${cls[k]}">${t}</p>`).join('');
+  if (lp) $('#mPeso').placeholder = 'Último: ' + lp.peso;
+  if (lf) $('#mFc').placeholder = 'Último: ' + lf.fc;
+  drawEvChart();
+}
+$('#evChips').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; evMetric = b.dataset.ev; S.set('evMetric', evMetric); renderEval(); });
+
+const LV = ['', 'leve', 'moderado', 'fuerte'];
+const ZONES = [
+  { id: 'muneca', k: 'Muñecas', a: '¡Ojo! Revisa la alineación de tu puño al impactar o ajusta tu vendaje de 4.5m para evitar esguinces.', t: ['Impacta con los nudillos de índice y medio, muñeca recta con el antebrazo.', 'Da 3–4 vueltas firmes a la muñeca antes de subir a los nudillos.', 'Fortalece con curl de muñeca usando una botella con agua.'] },
+  { id: 'nudillos', k: 'Nudillos', a: 'Dolor en nudillos suele indicar vendaje flojo en la zona de impacto o puño cerrado a destiempo.', t: ['Cierra el puño justo al momento de impactar.', 'Agrega una capa extra de venda sobre los nudillos.', 'Nunca golpees costal sin guantes.'] },
+  { id: 'codo', k: 'Codos', a: 'Cuidado: el dolor de codo suele venir de trabar el brazo al lanzar golpes al aire (hiperextensión).', t: ['En sombra extiende al 90%, sin bloquear el codo.', 'Regresa la mano tan rápido como sale.', 'El giro del puño se hace al final, sin forzar el codo.'] },
+  { id: 'hombro', k: 'Hombros', a: 'Hombros cargados: es la zona que más sufre al empezar. Baja las ráfagas y prioriza técnica.', t: ['Rotaciones externas con liga: 3×15.', 'Guardia relajada: tensa solo al recibir.', 'No hagas ráfagas dos días seguidos.'] },
+  { id: 'cuello', k: 'Cuello', a: 'Tensión en cuello: probablemente encoges los hombros o bajas demasiado la cabeza.', t: ['Mentón abajo pero mirada al frente.', 'Isométricos de cuello: 10 s en 4 direcciones.'] },
+  { id: 'espalda', k: 'Espalda baja', a: 'Espalda baja: el giro debe salir de la cadera y el pie, no solo del torso.', t: ['Pivota el pie trasero en el recto.', 'Plancha y bird-dog 3 veces por semana.'] },
+  { id: 'rodilla', k: 'Rodillas', a: 'Rodillas: mantén flexión ligera y gira sobre la punta del pie, nunca con el pie plantado.', t: ['Pivota sobre la parte delantera del pie.', 'Sentadilla a medio rango y puente de glúteo.', 'Tenis con buen agarre.'] },
+  { id: 'tobillo', k: 'Tobillos', a: 'Tobillos: revisa calzado y superficie al saltar cuerda.', t: ['Elevaciones de talón 3×20.', 'Salta cuerda sobre superficie no muy dura.'] }
+];
+const zState = {};
+function renderZones() {
+  const col = ['bg-steel text-zinc-300 border-line', 'bg-yellow-500/15 text-neon border-neon/50', 'bg-orange-500/15 text-orange-300 border-orange-400/60', 'bg-blood/20 text-red-200 border-blood'];
+  $('#zones').innerHTML = ZONES.map(z => { const l = zState[z.id] || 0; return `
+    <button data-z="${z.id}" class="rounded-xl border px-3 py-3 text-left text-sm font-semibold ${col[l]}">${z.k}<span class="block text-[11px] font-normal">${l ? 'Dolor ' + LV[l] : 'Sin dolor'}</span></button>`; }).join('');
+  const inj = S.get('inj', []), since = new Date(); since.setDate(since.getDate() - 14);
+  const active = ZONES.filter(z => zState[z.id]);
+  $('#zoneAlerts').innerHTML = active.map(z => {
+    const rep = inj.filter(r => parseISO(r.date) >= since && r.z[z.id]).length;
+    return `<div class="rounded-xl border border-blood/60 bg-blood/10 p-3 text-sm">
+      <p class="flex gap-2 font-bold text-red-100"><svg class="mt-0.5 h-5 w-5 shrink-0 text-blood" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3z"/><path d="M12 9v4M12 17h.01"/></svg>${z.a}</p>
+      <ul class="mt-2 space-y-1 text-xs text-zinc-300">${z.t.map(t => `<li>• ${t}</li>`).join('')}</ul>
+      ${zState[z.id] === 3 ? '<p class="mt-2 rounded-lg bg-blood px-2 py-1.5 text-xs font-bold text-white">Dolor fuerte, hinchazón o pérdida de movilidad: deja de entrenar esa zona y consulta a un médico o fisioterapeuta.</p>' : ''}
+      ${rep >= 2 ? `<p class="mt-2 text-xs font-bold text-neon">Ya lo reportaste ${rep} veces en 14 días: coméntalo con tu entrenador y revisa la técnica.</p>` : ''}
+    </div>`;
+  }).join('');
+}
+$('#zones').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; const z = b.dataset.z; zState[z] = ((zState[z] || 0) + 1) % 4; if (!zState[z]) delete zState[z]; renderZones(); });
+$('#zSave').onclick = () => {
+  if (!Object.keys(zState).length) { toast('Sin dolores marcados: ¡excelente!'); return; }
+  const inj = S.get('inj', []); inj.push({ id: uid(), date: todayISO(), z: { ...zState } }); S.set('inj', inj);
+  Object.keys(zState).forEach(k => delete zState[k]); renderZones(); renderDiary(); toast('Reporte de dolores guardado');
+};
+
+/* ==================== PERFIL: puntaje por área, méritos y desbloqueos ==================== */
+const avg = a => a && a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
+const clamp01 = v => Math.max(0, Math.min(1, v));
+const isoD = d => { const x = new Date(d); x.setMinutes(x.getMinutes() - x.getTimezoneOffset()); return x.toISOString().slice(0, 10); };
+const AREAS = [
+  { k: 'constancia', n: 'Constancia', how: 'Entrena y registra al menos 4 días por semana (meta: 8 días en 14).' },
+  { k: 'tecnica', n: 'Técnica', how: 'Sombra con el Entrenador IA (meta 90% de guardia) y buena coordinación en el diario.' },
+  { k: 'fisico', n: 'Condición física', how: 'Series de ejercicios completas y con alta precisión en el Entrenador IA.' },
+  { k: 'cardio', n: 'Resistencia', how: 'Completa todos los rounds del Cronómetro y baja tu nivel de cansancio.' },
+  { k: 'recuperacion', n: 'Recuperación', how: 'Duerme 7–8 h, registra el dolor del día siguiente y evita lesiones.' },
+  { k: 'finanzas', n: 'Finanzas', how: 'Abona al Fondo de Guantes cada quincena.' }
+];
+function activeDays() { const s = new Set(); ['diary', 'wk', 'ia', 'ex'].forEach(k => S.get(k, []).forEach(d => s.add(d.date))); return [...s].sort(); }
+function computeAreas() {
+  const L = S.get('diary', []).map(normD), wk = S.get('wk', []), ia = S.get('ia', []), ex = S.get('ex', []), inj = S.get('inj', []);
+  const lim = new Date(); lim.setHours(0, 0, 0, 0); lim.setDate(lim.getDate() - 13);
+  const v = {};
+  v.constancia = clamp01(activeDays().filter(d => parseISO(d) >= lim).length / 8) * 100;
+  const ia5 = avg(ia.slice(0, 5).map(x => x.pct)), coo5 = avg(L.filter(d => d.coo != null).slice(-5).map(d => d.coo / 5 * 100));
+  v.tecnica = avg([ia5, coo5].filter(x => x != null)) ?? 0;
+  v.fisico = avg(ex.slice(0, 6).map(x => .6 * x.prec + .4 * Math.min(1, x.comp) * 100)) ?? 0;
+  const wk5 = avg(wk.slice(-5).map(x => x.pct * 100)), c5 = avg(L.filter(d => d.cans != null).slice(-5).map(d => (10 - d.cans) / 9 * 100));
+  v.cardio = avg([wk5, c5].filter(x => x != null)) ?? 0;
+  const sl = avg(L.filter(d => d.sueno != null).slice(-5).map(d => Math.min(1, d.sueno / 8) * 100)), d24 = avg(L.filter(d => d.dolor24 != null).slice(-5).map(d => (10 - d.dolor24) / 9 * 100));
+  let rec = avg([sl, d24].filter(x => x != null)) ?? (L.length ? 60 : 0);
+  inj.filter(r => parseISO(r.date) >= lim).forEach(r => Object.values(r.z).forEach(l => rec -= [0, 3, 7, 15][l]));
+  v.recuperacion = Math.max(0, Math.min(100, rec));
+  v.finanzas = clamp01(savings() / GOAL) * 100;
+  Object.keys(v).forEach(k => v[k] = Math.round(v[k]));
+  return { v, general: Math.round(avg(Object.values(v))) };
+}
+function buildMerits() {
+  const ev = [], add = (date, pts, txt, area) => ev.push({ date, pts, txt, area });
+  S.get('diary', []).forEach(d => { add(d.date, 3, `Sesión registrada (${d.type})`, 'constancia'); if (d.dolor24 != null) add(d.date, 1, 'Seguimiento del día siguiente', 'recuperacion'); });
+  S.get('wk', []).forEach(w => { const r = `${w.done}/${w.total} rounds`; if (w.pct >= 1) add(w.date, 10, `Rutina completa · ${w.routine}`, 'cardio'); else if (w.pct >= .5) add(w.date, 4, `Rutina incompleta · ${r}`, 'cardio'); else add(w.date, -5, `Rutina abandonada · ${r}`, 'cardio'); });
+  S.get('ia', []).forEach(s => { if (s.pct >= 90) add(s.date, 8, `Guardia ${s.pct}% con Entrenador IA`, 'tecnica'); else if (s.pct >= 70) add(s.date, 4, `Guardia ${s.pct}% con Entrenador IA`, 'tecnica'); else if (s.pct < 50) add(s.date, -2, `Guardia baja (${s.pct}%)`, 'tecnica'); });
+  S.get('ex', []).forEach(s => {
+    const t = `${s.name} ${s.amount}/${s.target} ${s.unit === 's' ? 's' : 'repeticiones'} · ${s.prec}%`;
+    if (s.comp >= 1 && s.prec >= 80) add(s.date, 8, t, 'fisico'); else if (s.comp >= 1) add(s.date, 5, t, 'fisico'); else if (s.comp >= .5) add(s.date, 2, t + ' (incompleto)', 'fisico'); else add(s.date, -4, t + ' (abandonado)', 'fisico');
+    if (s.prec < 50) add(s.date, -2, `Técnica deficiente en ${s.name.toLowerCase()}`, 'fisico');
+  });
+  const days = activeDays(), today = todayISO();
+  days.forEach((a, i) => { const b = days[i + 1] || today, gap = Math.round((parseISO(b) - parseISO(a)) / 864e5) - 1; if (gap >= 4) add(b, -Math.min(20, 5 + (gap - 4) * 2), `${gap} días sin entrenar`, 'constancia'); });
+  if (days.length) {
+    const mon = d => { const x = parseISO(d); x.setDate(x.getDate() - (x.getDay() + 6) % 7); return x; };
+    const set = new Set(days), thisMon = mon(today), w = mon(days[0]);
+    while (w < thisMon) {
+      let n = 0; for (let k = 0; k < 7; k++) { const x = new Date(w); x.setDate(x.getDate() + k); if (set.has(isoD(x))) n++; }
+      const end = new Date(w); end.setDate(end.getDate() + 6);
+      if (n >= 4) add(isoD(end), 10, `Semana completa (${n} días)`, 'constancia'); else if (n <= 1) add(isoD(end), -5, `Semana floja (${n} ${n === 1 ? 'día' : 'días'})`, 'constancia');
+      w.setDate(w.getDate() + 7);
+    }
+  }
+  let acc = 0, goalHit = false;
+  S.get('dep', []).forEach(d => { acc += d.amt; add(d.date, Math.min(15, Math.floor(d.amt / 100)), `Abono de ${money(d.amt)} al Fondo`, 'finanzas'); if (!goalHit && acc >= GOAL) { goalHit = true; add(d.date, 20, '¡Fondo de Guantes completo!', 'finanzas'); } });
+  const g = S.get('goals', {}), n = Object.values(g).reduce((a, arr) => a + (arr || []).filter(Boolean).length, 0);
+  if (n) add(today, 5 * n, `${n} objetivos del plan cumplidos`, 'constancia');
+  return ev.filter(e => e.pts !== 0).sort((a, b) => b.date.localeCompare(a.date));
+}
+const LEVELS = [[0, 'Novato'], [100, 'Aprendiz'], [300, 'Boxeador en casa'], [600, 'Amateur en formación'], [1000, 'Peleador de gimnasio'], [1600, 'Listo para sparring'], [2400, 'Listo para competir']];
+function gates(A) {
+  const lim = new Date(); lim.setHours(0, 0, 0, 0); lim.setDate(lim.getDate() - 13);
+  const strong = S.get('inj', []).some(r => parseISO(r.date) >= lim && Object.values(r.z).some(l => l === 3));
+  const n = S.get('diary', []).length, goals = S.get('goals', {});
+  return [
+    { n: 'Fase 0 · Entrenar en casa', d: 'Aclimatación, técnica básica y ahorro.', req: [] },
+    { n: 'Fase 1 · Entrar al gimnasio de boxeo', d: 'Inscripción en Pachuca con equipo completo.', req: [['Puntaje general', A.general, 80], ['Ahorro del Fondo de Guantes', savings(), GOAL, '$']] },
+    { n: 'Fase 2 · Sparring técnico ligero', d: 'Siempre con permiso y supervisión de tu entrenador.', req: [['Puntaje general', A.general, 85], ['Técnica', A.v.tecnica, 85], ['Sesiones registradas', n, 60], ['Sin lesiones fuertes en 14 días', strong ? 0 : 1, 1, 'bool']] },
+    { n: 'Fase 3 · Primera pelea amateur', d: 'Hidalgo · trámite de Record Book.', req: [['Puntaje general', A.general, 90], ['Resistencia', A.v.cardio, 85], ['Condición física', A.v.fisico, 85], ['Sesiones registradas', n, 150], ['Examen médico aprobado (Plan)', goals.nov27?.[0] ? 1 : 0, 1, 'bool']] }
+  ];
+}
+function renderProfile() {
+  const A = computeAreas(), ev = buildMerits(), total = ev.reduce((a, e) => a + e.pts, 0);
+  const byArea = {}; ev.forEach(e => byArea[e.area] = (byArea[e.area] || 0) + e.pts);
+  let li = 0; LEVELS.forEach(([p], i) => { if (total >= p) li = i; });
+  const cur = LEVELS[li], nxt = LEVELS[li + 1], prog = nxt ? clamp01((total - cur[0]) / (nxt[0] - cur[0])) : 1;
+  const G = gates(A), unl = S.get('unlocked', [0]);
+  G.forEach((g, i) => {
+    g.met = g.req.every(r => r[1] >= r[2]);
+    if (i > 0 && g.met && unl.includes(i - 1) && !unl.includes(i)) { unl.push(i); S.set('unlocked', unl); toast('🔓 Desbloqueaste: ' + g.n); try { bell(3); } catch {} }
+  });
+  const stage = Math.max(...unl), name = S.get('pfName', 'Atleta'), age = new Date() >= new Date(2027, 4, 1) ? 28 : 27;
+  const scol = v => v >= 80 ? 'text-go' : v >= 50 ? 'text-neon' : 'text-blood', sbar = v => v >= 80 ? 'bg-go' : v >= 50 ? 'bg-neon' : 'bg-blood';
+  $('#pfHead').innerHTML = `
+    <div class="flex items-start justify-between gap-3">
+      <div class="min-w-0">
+        <button id="pfName" class="font-display text-4xl leading-none">${esc(name)} <span class="text-base text-zinc-500">✎</span></button>
+        <p class="text-xs text-zinc-400">${age} años · Pachuca, Hidalgo · Diestro</p>
+        <p class="mt-2 inline-block rounded-full bg-neon px-3 py-1 text-xs font-extrabold text-ink">NIVEL ${li + 1} · ${cur[1].toUpperCase()}</p>
+      </div>
+      <div class="shrink-0 text-center"><p class="font-display text-6xl leading-none ${scol(A.general)}">${A.general}</p><p class="text-[10px] font-bold tracking-wider text-zinc-400">PUNTAJE<br>GENERAL</p></div>
+    </div>
+    <div class="mt-4 flex items-baseline justify-between"><span class="font-display text-3xl ${total < 0 ? 'text-blood' : 'text-neon'}">${total} pts</span><span class="text-xs text-zinc-400">${nxt ? `${nxt[0] - total} pts para ${nxt[1]}` : 'Nivel máximo'}</span></div>
+    <div class="mt-1 h-3 overflow-hidden rounded-full bg-steel"><div class="h-full rounded-full bg-gradient-to-r from-blood to-neon" style="width:${Math.round(prog * 100)}%"></div></div>
+    <p class="mt-3 rounded-xl bg-steel px-3 py-2 text-sm">Etapa actual: <b class="text-neon">${G[stage].n}</b></p>`;
+  $('#pfName').onclick = () => { const v = prompt('¿Cómo te llamas?', name); if (v && v.trim()) { S.set('pfName', v.trim().slice(0, 24)); renderProfile(); } };
+  $('#pfAreas').innerHTML = AREAS.map(a => { const v = A.v[a.k], p = byArea[a.k] || 0; return `
+    <div class="rounded-xl bg-steel p-3">
+      <div class="flex items-baseline justify-between"><p class="text-xs font-bold text-zinc-300">${a.n}</p><span class="text-[11px] font-bold ${p < 0 ? 'text-blood' : 'text-go'}">${p > 0 ? '+' : ''}${p} pts</span></div>
+      <p class="font-display text-4xl leading-none ${scol(v)}">${v}<span class="text-base text-zinc-500">/100</span></p>
+      <div class="mt-1 h-1.5 overflow-hidden rounded-full bg-ink"><div class="h-full ${sbar(v)}" style="width:${v}%"></div></div>
+      <p class="mt-1.5 text-[11px] leading-snug text-zinc-400">${a.how}</p></div>`; }).join('');
+  $('#pfGates').innerHTML = G.map((g, i) => {
+    const open = unl.includes(i), pr = g.req.length ? avg(g.req.map(r => clamp01(r[1] / r[2]))) : 1;
+    const fmt = (r, v) => r[3] === '$' ? money(v) : r[3] === 'bool' ? (v ? 'Sí' : 'No') : Math.round(v);
+    return `<div class="rounded-xl border p-3 ${open ? 'border-go/60 bg-go/10' : i === stage + 1 ? 'border-neon/50 bg-neon/5' : 'border-line bg-steel opacity-80'}">
+      <div class="flex items-center justify-between gap-2"><p class="font-display text-xl leading-tight">${g.n}</p>
+      <span class="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-extrabold ${open ? 'bg-go text-ink' : 'bg-ink text-zinc-400'}">${open ? '🔓 DESBLOQUEADO' : `🔒 ${Math.round(pr * 100)}%`}</span></div>
+      <p class="text-xs text-zinc-400">${g.d}</p>
+      ${g.req.length ? `<div class="mt-2 space-y-1">${g.req.map(r => { const ok = r[1] >= r[2]; return `<div class="flex items-center justify-between text-xs"><span class="${ok ? 'text-green-300' : 'text-zinc-300'}">${ok ? '✓' : '○'} ${r[0]}</span><span class="font-bold ${ok ? 'text-go' : 'text-zinc-400'}">${fmt(r, r[1])} / ${fmt(r, r[2])}</span></div>`; }).join('')}</div>` : ''}
+      ${open && i > 0 && !g.met ? '<p class="mt-2 text-[11px] text-orange-300">Ya lo desbloqueaste, pero hoy no cumples todos los requisitos: mantén tu puntaje para avanzar a la siguiente fase.</p>' : ''}
+    </div>`; }).join('');
+  $('#pfMerits').innerHTML = ev.length ? ev.slice(0, 30).map(e => `
+    <div class="flex items-center justify-between gap-2 rounded-lg bg-steel px-3 py-1.5 text-sm"><span class="min-w-0"><span class="text-xs text-zinc-500">${fdate(e.date)}</span> ${esc(e.txt)}</span><b class="shrink-0 ${e.pts > 0 ? 'text-go' : 'text-blood'}">${e.pts > 0 ? '+' : ''}${e.pts}</b></div>`).join('')
+    : '<p class="text-xs text-zinc-500">Tus méritos aparecerán aquí en cuanto entrenes, registres o ahorres.</p>';
+}
+function renderTimerLog() {
+  const wk = S.get('wk', []), el = $('#tLog'); if (!el) return;
+  if (!wk.length) { el.innerHTML = '<p class="text-[11px] text-zinc-400">Al terminar o reiniciar, tu cumplimiento se califica y suma o resta puntos en tu Perfil.</p>'; return; }
+  const lim = new Date(); lim.setHours(0, 0, 0, 0); lim.setDate(lim.getDate() - 6);
+  const w7 = wk.filter(w => parseISO(w.date) >= lim), c7 = w7.length ? Math.round(avg(w7.map(w => w.pct)) * 100) : null;
+  el.innerHTML = `<p class="text-[11px] font-bold tracking-widest text-zinc-300">CUMPLIMIENTO${c7 != null ? ` · ÚLTIMOS 7 DÍAS ${c7}%` : ''}</p>` + wk.slice(-3).reverse().map(w => {
+    const [l, c, p] = w.pct >= 1 ? ['Completa', 'text-go', '+10'] : w.pct >= .5 ? ['Incompleta', 'text-neon', '+4'] : ['Abandonada', 'text-blood', '−5'];
+    return `<div class="flex items-center justify-between rounded-lg bg-black/30 px-2 py-1 text-xs"><span>${fdate(w.date)} · ${w.done}/${w.total} rounds</span><span class="font-bold ${c}">${l} ${Math.round(w.pct * 100)}% · ${p}</span></div>`; }).join('');
+}
+function logWorkout(complete) {
+  const r = routine(), total = r.rounds.length;
+  const rem = T.running ? (T.endAt - Date.now()) / 1000 : T.remaining;
+  let done = complete ? total : T.idx + (T.phase === 'rest' ? 1 : T.phase === 'work' ? Math.max(0, Math.min(1, (tc.work - Math.max(0, rem)) / tc.work)) : 0);
+  if (!complete && done < .15) return;
+  done = Math.round(done * 10) / 10;
+  const pct = Math.min(1, done / total), wk = S.get('wk', []);
+  wk.push({ id: uid(), date: todayISO(), routine: r.name, done, total, pct }); S.set('wk', wk.slice(-300));
+  renderTimerLog();
+  if (!complete) toast(`Rutina incompleta: ${done}/${total} rounds (${Math.round(pct * 100)}%) · ${pct >= .5 ? '+4' : '−5'} pts`);
+}
+
+/* ==================== AJUSTES / RESPALDO ==================== */
+const KEYS = ['voiceName', 'voiceRate', 'ia', 'iaCfg', 'tCfg', 'goals', 'dep', 'shop', 'diary', 'inj', 'ex', 'wk', 'pfName', 'unlocked', 'libSpeed', 'libView', 'libVoice', 'evMetric'];
+$('#btnSettings').onclick = () => $('#settings').classList.replace('hidden', 'flex');
+$('#setClose').onclick = () => $('#settings').classList.replace('flex', 'hidden');
+$('#settings').addEventListener('click', e => { if (e.target.id === 'settings') $('#settings').classList.replace('flex', 'hidden'); });
+$('#expBtn').onclick = () => {
+  const data = { app: 'ruta-al-ring', v: 1, exported: new Date().toISOString() }; KEYS.forEach(k => data[k] = S.get(k, null));
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+  a.download = `ruta-al-ring-${todayISO()}.json`; document.body.appendChild(a); a.click(); a.remove(); toast('Respaldo exportado');
+};
+$('#impFile').onchange = async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try { const d = JSON.parse(await f.text()); if (d.app !== 'ruta-al-ring') throw 0; KEYS.forEach(k => { if (d[k] != null) S.set(k, d[k]); }); toast('Respaldo importado'); setTimeout(() => location.reload(), 700); }
+  catch { toast('Archivo de respaldo no válido'); }
+  e.target.value = '';
+};
+$('#resetAll').onclick = () => { if (confirm('¿Borrar TODOS tus datos? Esto no se puede deshacer.')) { KEYS.concat('tab').forEach(k => localStorage.removeItem('rr_' + k)); location.reload(); } };
+
+/* Ícono para pantalla de inicio de iPhone */
+(() => {
+  const c = document.createElement('canvas'); c.width = c.height = 180; const x = c.getContext('2d');
+  x.fillStyle = '#0a0a0b'; x.fillRect(0, 0, 180, 180); x.fillStyle = '#e6ff00'; x.font = 'bold 92px Impact, sans-serif'; x.textAlign = 'center'; x.fillText('RR', 90, 120);
+  x.fillStyle = '#ff2d3d'; x.fillRect(30, 140, 120, 10);
+  const l = document.createElement('link'); l.rel = 'apple-touch-icon'; l.href = c.toDataURL('image/png'); document.head.appendChild(l);
+})();
+
+/* ==================== INICIO ==================== */
+$('#cfgWork').value = tc.work; $('#cfgRest').value = tc.rest;
+syncIaUi(); renderIaHistory();
+timerReset(); renderPlan(); renderSavings(); renderZones(); renderDiary();
+window.addEventListener('resize', () => { drawDiaryChart(); drawEvChart(); });
+renderLib(); renderTimerLog(); renderProfile();
+show(S.get('tab', 'ia'));
+</script>
+</body>
+</html>
